@@ -10,79 +10,68 @@ from Logging.MySql import MySQlConnect
 
 class GetControl:
 
-    def checkTreadStatus(self):
+    @staticmethod
+    def check_tread_status():
         try:
-            threadInstance = ThreadCollectionInstance.getInstance()
-            threadInstance.threadCollection.checkThreadStatus()
+            thread_instance = ThreadCollectionInstance.getInstance()
+            thread_instance.threadCollection.checkThreadStatus()
             return "{'result':'success'}"
         except Exception as e:
             return "{'error':'{}'}".format(e)
 
-    def getAllThermoCoupleData(self):
-        Logging.debugPrint(2, "Calling: getAllThermoCoupleData")  #Todo Change to logEvent()
-        hardwareStatusInstance = HardwareStatusInstance.getInstance()
-        json = hardwareStatusInstance.Thermocouples.getJson('K')
-        # print(json)
-        return json
+    @staticmethod
+    def get_all_thermocouple_data():
+        Logging.debugPrint(2, "Calling: getAllThermoCoupleData")
+        hardware_status_instance = HardwareStatusInstance.getInstance()
+        tc_json = hardware_status_instance.Thermocouples.getJson('K')
+        return tc_json
 
-
-    def holdAllZones(self):
+    @staticmethod
+    def hold_all_zones():
         try:
-            threadInstance = ThreadCollectionInstance.getInstance()
-            threadInstance.threadCollection.holdThread()
+            thread_instance = ThreadCollectionInstance.getInstance()
+            thread_instance.threadCollection.holdThread()
             return "{'result':'success'}"
         except Exception as e:
             return "{'error':'{}'}".format(e)
 
-    def pauseAllZones(self):
+    @staticmethod
+    def pause_all_zones():
         try:
-            threadInstance = ThreadCollectionInstance.getInstance()
-            threadInstance.threadCollection.pause()
+            thread_instance = ThreadCollectionInstance.getInstance()
+            thread_instance.threadCollection.holdThread()
             return "{'result':'success'}"
         except Exception as e:
-            print("lol")
             return "{'error':'{}'}".format(str(e))
 
-        
-    def resumeAllZones(self):
+    @staticmethod
+    def resume_all_zones():
         try:
-            threadInstance = ThreadCollectionInstance.getInstance()
-            threadInstance.threadCollection.removePause()
+            thread_instance = ThreadCollectionInstance.getInstance()
+            thread_instance.threadCollection.holdThread()
             return "{'result':'success'}"
         except Exception as e:
             return "{'error':'{}'}".format(e)
 
-    def unHoldAllZones(self):
+    @staticmethod
+    def un_hold_all_zones():
         try:
-            threadInstance = ThreadCollectionInstance.getInstance()
-            threadInstance.threadCollection.releaseHoldThread()
+            thread_instance = ThreadCollectionInstance.getInstance()
+            thread_instance.threadCollection.holdThread()
         except Exception as e:
             return "{'error':'{}'}".format(e)
         return "{'result':'success'}"
 
-
-    def putUnderVacuum(self):
-        try:
-            ProfileInstance.getInstance().vacuumWanted = True
-            sql = "UPDATE System_Status SET vacuum_wanted=1;"
-            mysql = MySQlConnect()
-            mysql.cur.execute(sql)
-            mysql.conn.commit()
-            return "{'result':'success'}"
-        except Exception as e:
-            Logging.debugPrint(3,"sql: {}".format(sql))
-            Logging.debugPrint(1, "Error in ThreadCollection, holdThread: {}".format(str(e)))
-            return "{'error':'{}'}".format(e)
-
-    def VacuumNotNeeded(self):
+    @staticmethod
+    def vacuum_not_needed():
+        sql = "UPDATE System_Status SET vacuum_wanted=0;"
         try:
             profile = ProfileInstance.getInstance()
             if not profile.activeProfile:
-                profile.vacuumWanted = False
-                sql = "UPDATE System_Status SET vacuum_wanted=0;"
                 mysql = MySQlConnect()
                 mysql.cur.execute(sql)
                 mysql.conn.commit()
+                profile.vacuumWanted = False
                 return "{'result':'success'}"
             else:
                 return "{'result':'Not Changed: Active Profile Running.'}"
@@ -91,17 +80,18 @@ class GetControl:
             Logging.debugPrint(1, "Error in ThreadCollection, holdThread: {}".format(str(e)))
             return "{'error':'{}'}".format(e)
 
-    def StopCryoPumpingChamber(self):
+    @staticmethod
+    def stop_cryopumping_chamber():
+        sql = "UPDATE System_Status SET vacuum_wanted=0;"
         try:
             profile = ProfileInstance.getInstance()
             if not profile.activeProfile:
-                profile.vacuumWanted = False
-                sql = "UPDATE System_Status SET vacuum_wanted=0;"
                 mysql = MySQlConnect()
                 mysql.cur.execute(sql)
                 mysql.conn.commit()
 
                 HardwareStatusInstance.getInstance().PC_104.digital_out.update({'CryoP GateValve': False})
+                profile.vacuumWanted = False
                 return "{'result':'success'}"
             else:
                 return "{'result':'Not Changed: Active Profile Running.'}"
@@ -110,12 +100,13 @@ class GetControl:
             Logging.debugPrint(1, "Error in ThreadCollection, holdThread: {}".format(str(e)))
             return "{'error':'{}'}".format(e)
 
-    def StopCryoPump(self):
+    @staticmethod
+    def stop_cryopump():
+        sql = "UPDATE System_Status SET vacuum_wanted=0;"
         try:
             profile = ProfileInstance.getInstance()
             if not profile.activeProfile:
                 profile.vacuumWanted = False
-                sql = "UPDATE System_Status SET vacuum_wanted=0;"
                 mysql = MySQlConnect()
                 mysql.cur.execute(sql)
                 mysql.conn.commit()
@@ -133,7 +124,8 @@ class GetControl:
             Logging.debugPrint(1, "Error in ThreadCollection, holdThread: {}".format(str(e)))
             return "{'error':'{}'}".format(e)
 
-    def StopRoughingPump(self):
+    @staticmethod
+    def stop_roughing_pump():
         try:
             profile = ProfileInstance.getInstance()
             if not profile.activeProfile:
@@ -142,6 +134,7 @@ class GetControl:
                 # wait here until the valve is closed
                 time.sleep(5)
                 pins.update({'RoughP Pwr Relay': False})
+                # TODO: Fix type in PurgeGass (EVERYWHERE)
                 pins.update({'RoughP PurgeGass': False})
                 return "{'result':'success'}"
             else:
@@ -149,34 +142,38 @@ class GetControl:
         except Exception as e:
             return "{'error':'{}'}".format(e)
 
-    def getAllZoneData(self):
+    @staticmethod
+    def get_all_zone_data():
+        pass
+        # TODO: If this doesn't work, why is it here?
         # This doesn't work...
-        Logging.debugPrint(2, "Calling: getAllZoneData")  #Todo Change to logEvent()
-        profileInstance = ProfileInstance.getInstance()
-        zones = profileInstance.zoneProfiles.zoneDict
-        json = "{"
-        for zone in zones:
-            print(zones[zone].getJson())
-        return "{'result':'success'}"
+        # Logging.debugPrint(2, "Calling: getAllZoneData")  #Todo Change to logEvent()
+        # profile_instance = ProfileInstance.getInstance()
+        # zones = profile_instance.zoneProfiles.zoneDict
+        # json = "{"
+        # for zone in zones:
+        #     print(zones[zone].getJson())
+        # return "{'result':'success'}"
 
-    def getLastError(self):
-        # data unused
+    @staticmethod
+    def get_last_error():
         Logging.debugPrint(2,"Calling: Get Last Err")  #Todo Change to logEvent()
-        errorList = ThreadCollectionInstance.getInstance().threadCollection.safetyThread.errorList
-        tempErrorList = dict(time=[],event=[],item=[],itemID=[],details=[],actions=[])
-        for i, error in enumerate(errorList):
-            tempErrorList['time'].append(error['time'])
-            tempErrorList['event'].append(error['event'])
-            tempErrorList['item'].append(error['item'])
-            tempErrorList['itemID'].append(error['itemID'])
-            tempErrorList['details'].append(error['details'])
-            tempErrorList['actions'].append(error['actions'])
+        error_list = ThreadCollectionInstance.getInstance().threadCollection.safetyThread.errorList
+        temp_error_list = dict(time=[],event=[],item=[],itemID=[],details=[],actions=[])
+        for i, error in enumerate(error_list):
+            temp_error_list['time'].append(error['time'])
+            temp_error_list['event'].append(error['event'])
+            temp_error_list['item'].append(error['item'])
+            temp_error_list['itemID'].append(error['itemID'])
+            temp_error_list['details'].append(error['details'])
+            temp_error_list['actions'].append(error['actions'])
 
-            errorList.pop(i)
+            error_list.pop(i)
 
-        return json.dumps(tempErrorList)
+        return json.dumps(temp_error_list)
 
-    def hardStop(self):
+    @staticmethod
+    def hard_stop():
         try:
             Logging.debugPrint(1,"Hard stop has been called")
             d_out = HardwareStatusInstance.getInstance().PC_104.digital_out
@@ -208,72 +205,81 @@ class GetControl:
         except Exception as e:
             return {'result':'{}'.format(e)}
 
-    def getShiTemps(self):
+    @staticmethod
+    def get_shi_temps():
         return HardwareStatusInstance.getInstance().ShiCryopump.mcc_status.get_json_plots()
 
-    def getEventList(self):
+    @staticmethod
+    def get_event_list():
         # data unused
         Logging.debugPrint(2,"Calling: Get Event List")
-        eventList = ProfileInstance.getInstance().systemStatusQueue
-        # eventList.append({"time":str(datetime.now()),
-        #                 "category":"System",
-        #                 "message":"This is a test event"})
-        tempEventList = dict(time=[],category=[],message=[])
-        for i, event in enumerate(eventList):
-            tempEventList['time'].append(event['time'])
-            tempEventList['category'].append(event['category'])
-            tempEventList['message'].append(event['message'])
+        event_list = ProfileInstance.getInstance().systemStatusQueue
+        temp_event_list = dict(time=[],category=[],message=[])
+        for i, event in enumerate(event_list):
+            temp_event_list['time'].append(event['time'])
+            temp_event_list['category'].append(event['category'])
+            temp_event_list['message'].append(event['message'])
 
-            eventList.pop(i)
-        Logging.debugPrint(2, "Events :" + str(eventList))
+            event_list.pop(i)
+        Logging.debugPrint(2, "Events :" + str(event_list))
 
-        return json.dumps(tempEventList)
+        return json.dumps(temp_event_list)
     
-    def getCryoPump_Status(self):
+    @staticmethod
+    def get_cryopump_status():
         return HardwareStatusInstance.getInstance().ShiCryopump.getJson_Status()
 
-    def getCryoPump_Params(self):
+    @staticmethod
+    def get_cryopump_params():
         return HardwareStatusInstance.getInstance().ShiCryopump.getJson_Params()
 
-    def getCryoPump_plots(self):
+    @staticmethod
+    def get_cryopump_plots():
         return HardwareStatusInstance.getInstance().ShiCryopump.get_json_plots()
 
-    def getPC104_Digital(self):
+    @staticmethod
+    def get_pc104_digital():
         pins = HardwareStatusInstance.getInstance().PC_104
         return '{"out":%s,"in bits":%s,"in sw":%s,"sw wf":%s}' % (
             pins.digital_out.getJson(),
             pins.digital_in.getJson_bits(),
             pins.digital_in.getJson_Switches(),
-            pins.digital_in.getJson_Switches_WF())
+            pins.digital_in.getJson_Switches_WF()
+        )
 
-    def getPC104_Switches(self):
+    @staticmethod
+    def get_pc104_switches():
         pins = HardwareStatusInstance.getInstance().PC_104
         return '{"in sw":%s,"sw wf":%s}' % (
             pins.digital_in.getJson_Switches(),
             pins.digital_in.getJson_Switches_WF())
 
-    def getPC104_Analog(self):
+    @staticmethod
+    def get_pc104_analog():
         pins = HardwareStatusInstance.getInstance().PC_104
         return '{"out":%s,"in":%s}' % (pins.analog_out.getJson(),
                                        pins.analog_in.getJson())
 
-    def getPressureGauges(self):
+    @staticmethod
+    def get_pressure_gauges():
         gauges = HardwareStatusInstance.getInstance().PfeifferGuages
         resp = {'CryoPressure': gauges.get_cryopump_pressure(),
                 'ChamberPressure': gauges.get_chamber_pressure(),
                 'RoughingPressure': gauges.get_roughpump_pressure()}
         return json.dumps(resp)
 
-    def getZoneTemps(self):
+    @staticmethod
+    def get_zone_temps():
+
         temps=dict(ZoneTemps=[])
 
         for i in range(1,10):
-            strzone="zone"+str(i)
+            str_zone="zone"+str(i)
             try:    
-                temps['ZoneTemps'].append(ProfileInstance.getInstance().zoneProfiles.getZone(strzone).getTemp())
+                temps['ZoneTemps'].append(ProfileInstance.getInstance().zoneProfiles.getZone(str_zone).getTemp())
+            #TODO:Change these to the Exception that might happen here.
             except Exception as e:
                 temps['ZoneTemps'].append(float('nan'))
-
             try:
                 temps['ZoneTemps'].append(ThreadCollectionInstance.getInstance().threadCollection.dutyCycleThread.zones["zone{}".format(i)].pid.SetPoint)
             except Exception as e:
@@ -282,20 +288,24 @@ class GetControl:
         buff=json.dumps(temps)
         return buff                        
 
-    def runProfile(self):
+    @staticmethod
+    def run_profile():
         HardwareStatusInstance.getInstance().TdkLambda_Cmds.append(['Shroud Duty Cycle', 0])
         HardwareStatusInstance.getInstance().TdkLambda_Cmds.append(['Disable Shroud Output'])
-        threadInstance = ThreadCollectionInstance.getInstance()
-        result = threadInstance.threadCollection.runProfile()
+        thread_instance = ThreadCollectionInstance.getInstance()
+        result = thread_instance.threadCollection.run_profile()
         return result
 
-    def recordData(self):
-        ProfileInstance.getInstance().recordData = True
+    @staticmethod
+    def record_data():
+        ProfileInstance.getInstance().record_data = True
 
-    def StoprecordData(self):
-        ProfileInstance.getInstance().recordData = False
+    @staticmethod
+    def stop_recording_data():
+        ProfileInstance.getInstance().record_data = False
 
-    def doRegen(self):
+    @staticmethod
+    def do_regen_cycle():
         try:
             hw = HardwareStatusInstance.getInstance()
             if not hw.ShiCryopump.is_regen_active():
@@ -306,7 +316,8 @@ class GetControl:
         except Exception as e:
             return "{'error':'{}'}".format(e)
 
-    def abortRegen(self):
+    @staticmethod
+    def abort_regen_cycle():
         try:
             hw = HardwareStatusInstance.getInstance()
             if hw.ShiCryopump.is_regen_active():
@@ -317,13 +328,15 @@ class GetControl:
         except Exception as e:
             return "{'error':'{}'}".format(e)
 
-    def getVacuumState(self):
+    @staticmethod
+    def get_vacuum_state():
         return json.dumps({"VacuumState": HardwareStatusInstance.getInstance().VacuumState})
 
-    def getTvacStatus(self):
+    @staticmethod
+    def get_tvac_status():
         hw = HardwareStatusInstance.getInstance()
         out = {
-            "recordData": ProfileInstance.getInstance().recordData,
+            "recordData": ProfileInstance.getInstance().record_data,
             "OperationalVacuum": HardwareStatusInstance.getInstance().OperationalVacuum,
             "activeProfile": ProfileInstance.getInstance().activeProfile,
             "vacuumWanted": ProfileInstance.getInstance().vacuumWanted,
@@ -340,3 +353,20 @@ class GetControl:
         if not ProfileInstance.getInstance().activeProfile:
             out["inRamp"] = None
         return json.dumps(out)
+
+    @staticmethod
+    def put_under_vacuum():
+        sql = "UPDATE System_Status SET vacuum_wanted=1;"
+        try:
+            mysql = MySQlConnect()
+            mysql.cur.execute(sql)
+            mysql.conn.commit()
+            ProfileInstance.getInstance().vacuumWanted = True
+            return "{'result':'success'}"
+        except Exception as e:
+            Logging.debugPrint(3, "sql: {}".format(sql))
+            Logging.debugPrint(1, "Error in ThreadCollection, holdThread: {}".format(str(e)))
+            return "{'error':'{}'}".format(e)
+
+
+

@@ -101,7 +101,7 @@ class ThermoCoupleUpdater(Thread):
                         'alarm': tc_alarm
                         }
                         '''
-                        if ProfileInstance.getInstance().recordData:
+                        if ProfileInstance.getInstance().record_data:
                             # Logging.logEvent("Event","ThermoCouple Reading",
                                 
                             # )

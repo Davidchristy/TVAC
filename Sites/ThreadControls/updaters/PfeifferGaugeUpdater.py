@@ -99,7 +99,7 @@ class PfeifferGaugeUpdater(Thread):
                                                                 'cc on': self.Pgauge.GetCCstate(2)},
                                                     {'addr': 3, 'error': self.Pgauge.GetError(3)}])
                                 if __name__ != '__main__':
-                                    if ProfileInstance.getInstance().recordData:
+                                    if ProfileInstance.getInstance().record_data:
                                         self.logPressureData()
                                 next_param_read_time += self.param_period
                         except ValueError as err:
