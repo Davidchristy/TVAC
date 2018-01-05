@@ -27,7 +27,7 @@ class PfeifferGaugeUpdater(Thread):
         self.zoneProfiles = ProfileInstance.getInstance().zoneProfiles
         self.Pgauge = PfeifferGauge()
         self.hw = HardwareStatusInstance.getInstance()
-        self.gauges = self.hw.PfeifferGuages
+        self.gauges = self.hw.pfeiffer_gauges
         self.pressure_read_peroid = 0.5  # 0.5s loop period
         self.param_period = 5  # 5 second period
 
@@ -191,9 +191,9 @@ if __name__ == '__main__':
     if(len(sys.argv)>1):
         for arg in sys.argv:
             if arg.startswith("-v"):
-                Logging.verbos = arg.count("v")
+                Logging.verbose = arg.count("v")
     Logging.logEvent("Debug","Status Update",
-        {"message": "Debug on: Level {}".format(Logging.verbos),
+        {"message": "Debug on: Level {}".format(Logging.verbose),
          "level":1})
     thread = PfeifferGaugeUpdater()
     thread.daemon = True

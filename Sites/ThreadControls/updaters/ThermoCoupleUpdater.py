@@ -22,7 +22,7 @@ class ThermoCoupleUpdater(Thread):
     __instance = None
 
     def __init__(self, parent):
-        if ThermoCoupleUpdater.__instance != None:
+        if ThermoCoupleUpdater.__instance:
             raise Exception("This class is a singleton!")
         else:
             Logging.logEvent("Debug","Status Update",
@@ -31,94 +31,74 @@ class ThermoCoupleUpdater(Thread):
             ThermoCoupleUpdater.__instance = self
             self.parent = parent
             self.hardwareStatusInstance = HardwareStatusInstance
-            self.SLEEP_TIME = 5 # will be 30 seconds
+            self.SLEEP_TIME = 5
             super(ThermoCoupleUpdater, self).__init__()
 
     def run(self):
+        """
+        :rtype: None
+
+        This is an infinite loop that runs at all times while the program runs.
+        If it errors out for whatever reason it will catch the error and restart the thread.
+
+        It's job to to read the hardware Thermocouple and update the hw status object with updated data.
+
+        # TODO: Make sure the program halts if it can't read the data.
+        """
+
         # This makes the loop constant, even after failing, it will just restart the thread info
         while True:
             # This try is there to catch any errors that might show up
             try:
                 # Thread "Start up" stuff goes here
-                Logging.logEvent("Debug","Status Update",
-                {"message": "Starting ThermoCoupleUpdater",
-                 "level":2})
-
-                ipAddr_34980A = '192.168.99.3'
-                Channel_List = "(@1001:1020,2036:2040,3001:3040)"
-                hwStatus = self.hardwareStatusInstance.getInstance()
-
-                if os.name == "posix":
-                    userName = os.environ['LOGNAME']
-                else:
-                    userName = "User"
-
-                if "root" in userName:
-                    # Hasn't been tested yet
-                    Tharsis = Keysight_34980A_TCs(ipAddr_34980A, ChannelList = Channel_List)
-                    Tharsis.init_sys()
+                hw_status, tharsis, user_name = self.start_procedure()
 
                 while True:
-                    # Setting True while testing
-                    if True or ProfileInstance.getInstance().activeProfile:
-                        if "root" in userName:
-                            Logging.logEvent("Debug","Status Update",
-                            {"message": "Pulling live data for TC",
-                             "level":4})
-                            # Hasn't been tested yet
-                            TCs = Tharsis.getTC_Values()
-                        else:
-                            # We are in a test enviorment, so give it fake data
+                    # TODO: I don't think "record data" would work here.
+                    if "root" in user_name:
+                        Logging.logEvent("Debug","Status Update",
+                        {"message": "Pulling live data for TC",
+                         "level":4})
+                        tc_values = tharsis.getTC_Values()
+                    else:
+                        # We are in a test environment, so give it fake data
+                        Logging.logEvent("Debug","Status Update",
+                        {"message": "Generating test data for TC",
+                         "level":4})
 
-                            Logging.logEvent("Debug","Status Update",
-                            {"message": "Generating test data for TC",
-                             "level":4})
-
-
-                            currentPID = self.parent.dutyCycleThread.zones["zone1"].pid.error_value
-                            TCs = {
-                                'time': datetime.now(),
-                                'tcList': [
-                                    {'Thermocouple': 11,'working':True, 'temp':hwStatus.Thermocouples.getTC(11).getTemp() + currentPID + 5},
-                                    # {'Thermocouple': 90,'working':True, 'temp':hwStatus.Thermocouples.getTC(90).getTemp() + currentPID + 2},
-                                    # {'Thermocouple': 15,'working':True, 'temp':hwStatus.Thermocouples.getTC(15).getTemp() + currentPID + 3},
-                                    # {'Thermocouple': 16,'working':True, 'temp':hwStatus.Thermocouples.getTC(16).getTemp() + currentPID + 4},
-                                    # {'Thermocouple': 17,'working':True, 'temp':hwStatus.Thermocouples.getTC(17).getTemp() + currentPID + 5},
-                                    # {'Thermocouple': 18,'working':True, 'temp':hwStatus.Thermocouples.getTC(18).getTemp() + currentPID + 0},
-                                    # {'Thermocouple': 19,'working':True, 'temp':hwStatus.Thermocouples.getTC(19).getTemp() + currentPID + 0},
-                                    # {'Thermocouple': 20,'working':True, 'temp':hwStatus.Thermocouples.getTC(20).getTemp() + currentPID + 0},
-
-                                ]
-                            }
-
-                        '''
-                        TCs is a list of dicitations ordered like this....
-                        {
-                        'Thermocouple': tc_num,
-                        'time': tc_time_offset,
-                        'temp': tc_tempK,
-                        'working': tc_working,
-                        'alarm': tc_alarm
+                        current_pid = self.parent.dutyCycleThread.zones["zone1"].pid.error_value
+                        tc_values = {
+                            'time': datetime.now(),
+                            'tcList': [
+                                {'Thermocouple': 11,'working':True, 'temp': hw_status.thermocouples.getTC(11).getTemp() + current_pid + 0},
+                            ]
                         }
-                        '''
-                        if ProfileInstance.getInstance().record_data:
-                            # Logging.logEvent("Event","ThermoCouple Reading",
-                                
-                            # )
-                            Logging.logLiveTemperatureData({"message": "Current TC reading",
-                                 "time":    TCs['time'],
-                                 "tcList":  TCs['tcList'],
-                                 "profileUUID": ProfileInstance.getInstance().zoneProfiles.profileUUID,
-                                 "ProfileInstance": ProfileInstance.getInstance()})
 
-                        Logging.logEvent("Debug","Data Dump",
-                            {"message": "Current TC reading",
-                             "level":3,
-                             "dict":TCs['tcList']})
+                    '''
+                    TCs is a list of dictionaries ordered like this....
+                    {
+                    'Thermocouple': tc_num,
+                    'time': tc_time_offset,
+                    'temp': tc_tempK,
+                    'working': tc_working,
+                    'alarm': tc_alarm
+                    }
+                    '''
+                    if ProfileInstance.getInstance().record_data:
+                        Logging.logLiveTemperatureData({"message": "Current TC reading",
+                             "time":    tc_values['time'],
+                             "tcList":  tc_values['tcList'],
+                             "profileUUID": ProfileInstance.getInstance().zoneProfiles.profileUUID,
+                             "ProfileInstance": ProfileInstance.getInstance()})
 
-                        hwStatus.Thermocouples.update(TCs)
+                    Logging.logEvent("Debug","Data Dump",
+                                     {"message": "Current TC reading",
+                         "level":3,
+                         "dict":tc_values['tcList']})
 
-                        time.sleep(self.SLEEP_TIME)
+                    hw_status.thermocouples.update(tc_values)
+
+                    time.sleep(self.SLEEP_TIME)
 
             except Exception as e:
                 exc_type, exc_obj, exc_tb = sys.exc_info()
@@ -140,4 +120,22 @@ class ThermoCoupleUpdater(Thread):
                 # end of try/except
             # end of running check
         # end of while True
+
+    def start_procedure(self):
+        Logging.logEvent("Debug", "Status Update",
+                         {"message": "Starting ThermoCoupleUpdater",
+                          "level": 2})
+        ip_addr_34980a = '192.168.99.3'
+        channel__list = "(@1001:1020,2036:2040,3001:3040)"
+        hw_status = self.hardwareStatusInstance.getInstance()
+        if os.name == "posix":
+            user_name = os.environ['LOGNAME']
+        else:
+            user_name = "User"
+        if "root" in user_name:
+            tharsis = Keysight_34980A_TCs(ip_addr_34980a, ChannelList=channel__list)
+            tharsis.init_sys()
+        else:
+            tharsis = None
+        return hw_status, tharsis, user_name
     # end of run()

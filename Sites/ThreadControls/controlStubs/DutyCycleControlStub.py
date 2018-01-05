@@ -221,7 +221,7 @@ class DutyCycleControlStub(Thread):
         self.parent = parent
         Thread.__init__(self)
         self.updatePeriod = ProfileInstance.getInstance().zoneProfiles.updatePeriod
-        self.d_out        = HardwareStatusInstance.getInstance().PC_104.digital_out
+        self.d_out        = HardwareStatusInstance.getInstance().pc_104.digital_out
 
         self.zones = {
             "zone1": ZoneControlStub(name='zone1',lamps=['IR Lamp 1','IR Lamp 2'], parent=self),
@@ -421,7 +421,7 @@ class DutyCycleControlStub(Thread):
                 # end of try, catch
             else:
                 Logging.debugPrint(4,"DCCS: activeProfile: {}".format(ProfileInstance.getInstance().activeProfile))
-                Logging.debugPrint(4,"DCCS: OperationalVacuum: {}".format(HardwareStatusInstance.getInstance().OperationalVacuum))
+                Logging.debugPrint(4,"DCCS: OperationalVacuum: {}".format(HardwareStatusInstance.getInstance().operational_vacuum))
                 Logging.debugPrint(4,"DCCS: getActiveProfileStatus: {}".format(ProfileInstance.getInstance().zoneProfiles.getActiveProfileStatus()))
             # Sleeping so it doesn't busy wait
             time.sleep(1)

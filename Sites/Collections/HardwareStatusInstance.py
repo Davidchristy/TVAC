@@ -16,38 +16,36 @@ class HardwareStatusInstance:
     @staticmethod
     def getInstance():
         """ Static access method. """
-        if HardwareStatusInstance.__instance == None:
+        if not HardwareStatusInstance.__instance:
             HardwareStatusInstance()
         return HardwareStatusInstance.__instance
 
     def __init__(self):
-        if HardwareStatusInstance.__instance != None:
+        if HardwareStatusInstance.__instance:
             raise Exception("This class is a singleton!")
         else:
             Logging.logEvent("Debug","Status Update", 
                 {"message": "Creating HardwareStatusInstance",
                  "level":2})
-            self.Thermocouples = ThermocoupleCollection()
-            self.PfeifferGuages = PfeifferGaugeCollection()
-            self.ShiCryopump = ShiCryopumpCollection()
-            self.Shi_MCC_Cmds = []  # ['cmd', arg, arg,... arg]
-            self.Shi_Compressor_Cmds = []  # 'cmd'
-            self.TdkLambda_PS = TdkLambdaCollection()
-            self.TdkLambda_Cmds = []  # ['cmd', arg, arg,... arg]
-            self.PC_104 = PC_104_Instance.getInstance()
+            self.thermocouples = ThermocoupleCollection()
+            self.pfeiffer_gauges = PfeifferGaugeCollection()
+            self.shi_cryopump = ShiCryopumpCollection()
+            self.shi_mcc_cmds = []  # ['cmd', arg, arg,... arg]
+            self.shi_compressor_cmds = []  # 'cmd'
+            self.tdk_lambda_ps = TdkLambdaCollection()
+            self.tdk_lambda__cmds = []  # ['cmd', arg, arg,... arg]
+            self.pc_104 = PC_104_Instance.getInstance()
 
             # System Wide Stats
             if os.name == "posix":
-                userName = os.environ['LOGNAME']
+                user_name = os.environ['LOGNAME']
             else:
-                userName = "user" 
-            if "root" in userName:
-                self.OperationalVacuum = False
-                # self.OperationalVacuum = True
+                user_name = "user"
+            if "root" in user_name:
+                self.operational_vacuum = False
                 
             else:
-                self.OperationalVacuum = True
-            self.VacuumState = None
-            # self.VacuumState = "Operational Vacuum"
+                self.operational_vacuum = True
+            self.vacuum_state = None
 
             HardwareStatusInstance.__instance = self

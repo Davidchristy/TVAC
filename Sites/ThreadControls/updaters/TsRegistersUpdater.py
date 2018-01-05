@@ -196,7 +196,7 @@ if __name__ == '__main__':
     if(len(sys.argv)>1):
         for arg in sys.argv:
             if arg.startswith("-v"):
-                Logging.verbos = arg.count("v")
+                Logging.verbose = arg.count("v")
 
     thread = TsRegistersUpdater()
     thread.daemon = True

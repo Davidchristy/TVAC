@@ -36,11 +36,11 @@ class LN2ControlStub(Thread):
             # Check to make sure there is an active profile
             # and that we are sitting in an operational vacuum
             # and that all drivers and updaters are running
-            a_out = self.hardwareStatus.getInstance().PC_104.analog_out  # todo: better variable name?
-            d_out = self.hardwareStatus.getInstance().PC_104.digital_out
+            a_out = self.hardwareStatus.getInstance().pc_104.analog_out  # todo: better variable name?
+            d_out = self.hardwareStatus.getInstance().pc_104.digital_out
             a_out.update({'LN2 Shroud': 0,'LN2 Platen': 0})
             d_out.update({'LN2-S Sol': False, 'LN2-P Sol': False, })
-            if ProfileInstance.getInstance().activeProfile and HardwareStatusInstance.getInstance().OperationalVacuum:
+            if ProfileInstance.getInstance().activeProfile and HardwareStatusInstance.getInstance().operational_vacuum:
                 # try and catch anything that might go wrong
                 try:
                     # some start up stuff here
@@ -55,7 +55,7 @@ class LN2ControlStub(Thread):
                         userName = "user" 
 
                     # Normal program loop
-                    while ProfileInstance.getInstance().activeProfile and HardwareStatusInstance.getInstance().OperationalVacuum:
+                    while ProfileInstance.getInstance().activeProfile and HardwareStatusInstance.getInstance().operational_vacuum:
                         dutycyclelist = []
                         platenDuty = None
                         for zoneStr in self.ThreadCollection.dutyCycleThread.zones:
@@ -114,7 +114,7 @@ class LN2ControlStub(Thread):
                         raise e
                 # end of try catch
             else:
-                Logging.debugPrint(4,"LN2: AP: {}, Vacuum: {}".format(ProfileInstance.getInstance().activeProfile,HardwareStatusInstance.getInstance().OperationalVacuum))
+                Logging.debugPrint(4,"LN2: AP: {}, Vacuum: {}".format(ProfileInstance.getInstance().activeProfile,HardwareStatusInstance.getInstance().operational_vacuum))
             # end of If should be running
             time.sleep(self.SLEEP_TIME)
 

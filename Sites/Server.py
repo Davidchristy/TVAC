@@ -15,16 +15,16 @@ class ReuseAddrTCPServer(socketserver.TCPServer):
 
 if __name__ == '__main__':
     # adding debug info
-    if(len(sys.argv)>1):
+    if len(sys.argv) > 1:
         for arg in sys.argv:
             if arg.startswith("-v"):
-                Logging.verbos = arg.count("v")
-    if(len(sys.argv)>2):
+                Logging.verbose = arg.count("v")
+    if len(sys.argv) > 2:
         for arg in sys.argv:
             if "--debug" in arg:
                 Logging.debug = True
     Logging.logEvent("Debug","Status Update",
-        {"message": "Verbos on: Level {}".format(Logging.verbos),
+        {"message": "Verbos on: Level {}".format(Logging.verbose),
          "level":1})
     PORT = 8000
 

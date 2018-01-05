@@ -410,25 +410,25 @@ class VacuumControlStub(Thread):
 
     def wait_for_hardware(self):
         ready = True
-        ready &= self.hw.PC_104.digital_in.getVal('CryoP_GV_Open') is not None
-        ready &= self.hw.PC_104.digital_in.getVal('CryoP_GV_Closed') is not None
-        ready &= self.hw.PC_104.digital_in.getVal('RoughP_Powered') is not None
-        ready &= self.hw.PC_104.digital_in.getVal('RoughP_On_Sw') is not None
-        ready &= self.hw.PC_104.digital_in.getVal('Chamber Closed') is not None
-        ready &= self.hw.PfeifferGuages.get_roughpump_pressure() is not None
-        ready &= self.hw.PfeifferGuages.get_chamber_pressure() is not None
-        ready &= self.hw.PfeifferGuages.get_cryopump_pressure() is not None
-        ready &= self.hw.ShiCryopump.is_cryopump_cold() is not None
-        ready &= self.hw.ShiCryopump.is_regen_active() is not None
-        ready &= self.hw.ShiCryopump.cryopump_needs_regen() is not None
-        ready &= self.hw.ShiCryopump.cryopump_wants_regen_soon() is not None
-        ready &= self.hw.ShiCryopump.get_mcc_status('Tc Pressure') is not None
-        ready &= self.hw.ShiCryopump.get_mcc_params('Tc Pressure State') is not None
-        ready &= self.hw.ShiCryopump.get_mcc_status('Stage 1 Temp') is not None
-        ready &= self.hw.ShiCryopump.get_mcc_status('Stage 2 Temp') is not None
-        ready &= self.hw.ShiCryopump.get_compressor('Helium Discharge Temperature') is not None
-        ready &= self.hw.ShiCryopump.get_compressor('Water Outlet Temperature') is not None
-        ready &= self.hw.ShiCryopump.get_compressor('System ON') is not None
+        ready &= self.hw.pc_104.digital_in.getVal('CryoP_GV_Open') is not None
+        ready &= self.hw.pc_104.digital_in.getVal('CryoP_GV_Closed') is not None
+        ready &= self.hw.pc_104.digital_in.getVal('RoughP_Powered') is not None
+        ready &= self.hw.pc_104.digital_in.getVal('RoughP_On_Sw') is not None
+        ready &= self.hw.pc_104.digital_in.getVal('Chamber Closed') is not None
+        ready &= self.hw.pfeiffer_gauges.get_roughpump_pressure() is not None
+        ready &= self.hw.pfeiffer_gauges.get_chamber_pressure() is not None
+        ready &= self.hw.pfeiffer_gauges.get_cryopump_pressure() is not None
+        ready &= self.hw.shi_cryopump.is_cryopump_cold() is not None
+        ready &= self.hw.shi_cryopump.is_regen_active() is not None
+        ready &= self.hw.shi_cryopump.cryopump_needs_regen() is not None
+        ready &= self.hw.shi_cryopump.cryopump_wants_regen_soon() is not None
+        ready &= self.hw.shi_cryopump.get_mcc_status('Tc Pressure') is not None
+        ready &= self.hw.shi_cryopump.get_mcc_params('Tc Pressure State') is not None
+        ready &= self.hw.shi_cryopump.get_mcc_status('Stage 1 Temp') is not None
+        ready &= self.hw.shi_cryopump.get_mcc_status('Stage 2 Temp') is not None
+        ready &= self.hw.shi_cryopump.get_compressor('Helium Discharge Temperature') is not None
+        ready &= self.hw.shi_cryopump.get_compressor('Water Outlet Temperature') is not None
+        ready &= self.hw.shi_cryopump.get_compressor('System ON') is not None
         ready &= self.profile.vacuumWanted is not None
         if os.name == "posix":
             userName = os.environ['LOGNAME']

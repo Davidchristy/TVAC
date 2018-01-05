@@ -10,12 +10,12 @@ class ProfileInstance:
     @staticmethod
     def getInstance():
         """ Static access method. """
-        if ProfileInstance.__instance == None:
+        if not ProfileInstance.__instance:
             ProfileInstance()
         return ProfileInstance.__instance
 
     def __init__(self):
-        if ProfileInstance.__instance != None:
+        if ProfileInstance.__instance:
             raise Exception("This class is a singleton!")
         else:
             Logging.logEvent("Debug","Status Update", 
@@ -30,7 +30,7 @@ class ProfileInstance:
             self.vacuumWanted = False  
             # TODO: When Profile aborted is vacuumWanted cleared?
             self.currentSetpoint = None
-            self.recordData = False
+            self.record_data = False
             self.inRamp = False
             self.inHold = False
             self.inPause = False
@@ -57,7 +57,7 @@ class ProfileInstance:
         self.inHold = True if results["in_hold"] else False
         self.inPause = True if results["in_pause"] else False
         self.inRamp = True if results["in_ramp"] else False
-        self.recordData = True if results["record_data"] else False
+        self.record_data = True if results["record_data"] else False
         self.vacuumWanted = True if results["vacuum_wanted"] else False
         self.currentSetpoint = results["setpoint"]
 

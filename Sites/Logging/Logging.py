@@ -10,7 +10,7 @@ class Logging(object):
     Logging is a static class that will take and filter every kind of
     output this program does
     """
-    verbos = 0
+    verbose = 0
     debug = False
 
     @staticmethod
@@ -56,7 +56,7 @@ class Logging(object):
 
     @staticmethod
     def debugPrint(verbosLevel, string, dictionary=None):
-        if Logging.verbos >= verbosLevel:
+        if Logging.verbose >= verbosLevel:
             spacing = "  "*(verbosLevel-1)
             BLUE_START = "\033[94m"
             COLOR_END = "\033[0m"

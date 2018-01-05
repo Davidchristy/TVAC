@@ -97,7 +97,7 @@ class SafetyCheck(Thread):
                         "Human Touch Alarm: Low Temperature": False,
                         "Pressure Loss In Profile": False,
                     }
-                    TCs = hardwareStatusInstance.Thermocouples.ValidTCs
+                    TCs = hardwareStatusInstance.thermocouples.ValidTCs
                     for tc in TCs:
                         # if there are any TC's higher than max temp
                         if tc.temp > MAX_OPERATING_TEMP:
@@ -235,7 +235,7 @@ class SafetyCheck(Thread):
 
                     # Logging if you've entered operational vacuum, and then left it
                     # TODO: OperationalVacuum can't be updated if there isn't an active profile...this needs to change
-                    if HardwareStatusInstance.getInstance().OperationalVacuum:
+                    if HardwareStatusInstance.getInstance().operational_vacuum:
                         vacuum = True
 
                     if os.name == "posix":
