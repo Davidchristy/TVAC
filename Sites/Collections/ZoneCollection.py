@@ -69,7 +69,7 @@ class ZoneCollection:
 
         results = mysql.cur.fetchall()
         TCs = []
-        tcList = HardwareStatusInstance.getInstance().Thermocouples.tcList
+        tcList = HardwareStatusInstance.getInstance().thermocouples.tcList
         for result in results:
             TCs.append(int(result['thermocouple']))
 

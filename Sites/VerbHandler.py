@@ -4,7 +4,7 @@ import sys
 import os
 
 from Controllers.PostControl import PostControl
-from Controllers.GetControl import GetControl
+from Controllers import GetControl
 from ThreadControls.ThreadCollectionInstance import ThreadCollectionInstance
 
 from Logging.Logging import Logging
@@ -24,39 +24,39 @@ class VerbHandler(http.server.BaseHTTPRequestHandler):
                  "level":2})
 
             # Based on the path we are given, do different functions
-            control = GetControl()
+            # control = GetControl()
             result = {
-                '/runProfile': control.run_profile,
-                '/checkZoneStatus': control.check_tread_status,
-                '/getAllThermoCoupleData': control.get_all_thermocouple_data,
-                '/getAllZoneData': control.get_all_zone_data,
-                '/getShiTemps': control.get_shi_temps,
-                '/getCryoPump_Status': control.get_cryopump_status,
-                '/getCryoPump_Params': control.get_cryopump_params,
-                '/getCryoPump_plots': control.get_cryopump_plots,
-                '/getPC104_Digital': control.get_pc104_digital,
-                '/getPC104_Switches': control.get_pc104_switches,
-                '/getPC104_Analog': control.get_pc104_analog,
-                '/getPressureGauges': control.get_pressure_gauges,
-                '/getZoneTemps': control.get_zone_temps,
-                '/getLastErr' : control.get_last_error,
-                '/putUnderVacuum': put_under_vacuum,
-                '/VacuumNotNeeded':control.vacuum_not_needed,
-                '/StopCryoPumpingChamber':control.stop_cryopumping_chamber,
-                '/StopCryoPump':control.stop_cryopump,
-                '/StopRoughingPump':control.stop_roughing_pump,
-                '/getEventList':control.get_event_list,
-                '/hardStop':control.hard_stop,
-                '/hold':control.hold_all_zones,
-                '/pause':control.pause_all_zones,
-                '/resume':control.resume_all_zones,
-                '/unHold':control.un_hold_all_zones,
-                '/getVacuumState': control.get_vacuum_state,
-                '/doRegen': control.do_regen_cycle,
-                '/abortRegen': control.abort_regen_cycle,
-                '/getTvacStatus': control.get_tvac_status,
-                '/StoprecordData': control.stop_recording_data,
-                '/recordData': control.record_data,
+                '/runProfile': GetControl.run_profile,
+                '/checkZoneStatus': GetControl.check_tread_status,
+                '/getAllThermoCoupleData': GetControl.get_all_thermocouple_data,
+                '/getAllZoneData': GetControl.get_all_zone_data,
+                '/getShiTemps': GetControl.get_shi_temps,
+                '/getCryoPump_Status': GetControl.get_cryopump_status,
+                '/getCryoPump_Params': GetControl.get_cryopump_params,
+                '/getCryoPump_plots': GetControl.get_cryopump_plots,
+                '/getPC104_Digital': GetControl.get_pc104_digital,
+                '/getPC104_Switches': GetControl.get_pc104_switches,
+                '/getPC104_Analog': GetControl.get_pc104_analog,
+                '/getPressureGauges': GetControl.get_pressure_gauges,
+                '/getZoneTemps': GetControl.get_zone_temps,
+                '/getLastErr' : GetControl.get_last_error,
+                '/putUnderVacuum': GetControl.put_under_vacuum,
+                '/VacuumNotNeeded':GetControl.vacuum_not_needed,
+                '/StopCryoPumpingChamber':GetControl.stop_cryopumping_chamber,
+                '/StopCryoPump':GetControl.stop_cryopump,
+                '/StopRoughingPump':GetControl.stop_roughing_pump,
+                '/getEventList':GetControl.get_event_list,
+                '/hardStop':GetControl.hard_stop,
+                '/hold':GetControl.hold_all_zones,
+                '/pause':GetControl.pause_all_zones,
+                '/resume':GetControl.resume_all_zones,
+                '/unHold':GetControl.un_hold_all_zones,
+                '/getVacuumState': GetControl.get_vacuum_state,
+                '/doRegen': GetControl.do_regen_cycle,
+                '/abortRegen': GetControl.abort_regen_cycle,
+                '/getTvacStatus': GetControl.get_tvac_status,
+                '/StoprecordData': GetControl.stop_recording_data,
+                '/recordData': GetControl.record_data,
                 }[path]()
 
             Logging.logEvent("Debug","Status Update",

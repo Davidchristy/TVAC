@@ -37,7 +37,7 @@ class ThreadCollection:
             # load up ram (zone collection) with info from the database and the given start time
             self.zoneProfiles.load_profile(result['profile_name'], result['profile_Start_Time'], result['thermal_Start_Time'], result['first_Soak_Start_Time'])
             # after it's in memory, run it!
-            self.runProfile(firstStart = False)
+            self.run_profile(firstStart = False)
         # end if no active profile
     #end of function 
 
@@ -110,7 +110,7 @@ class ThreadCollection:
 
         return True
 
-    def runProfile(self, firstStart=True):
+    def run_profile(self, firstStart=True):
         '''
         This assumes a profile is already loaded in RAM, it will start the profile
         Also making an entry in the DB

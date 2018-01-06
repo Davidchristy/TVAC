@@ -36,7 +36,7 @@ class ZoneProfileContract:
         hwStatus = HardwareStatusInstance.getInstance()
         list = []
         for tc in thermocouples:
-            list.append(hwStatus.Thermocouples.getTC(tc))
+            list.append(hwStatus.thermocouples.getTC(tc))
         self.__lock.release()
         return list
 

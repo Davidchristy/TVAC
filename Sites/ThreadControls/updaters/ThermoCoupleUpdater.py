@@ -66,13 +66,25 @@ class ThermoCoupleUpdater(Thread):
                         {"message": "Generating test data for TC",
                          "level":4})
 
-                        current_pid = self.parent.dutyCycleThread.zones["zone1"].pid.error_value
+                        f_tcs = open("../virtualized/hw-files/thermocouples.txt", "r")
+                        tcs = []
+                        for line in f_tcs:
+                            tcs.append(float(line.strip()))
+                        f_tcs.close()
+
+
                         tc_values = {
                             'time': datetime.now(),
                             'tcList': [
-                                {'Thermocouple': 11,'working':True, 'temp': hw_status.thermocouples.getTC(11).getTemp() + current_pid + 0},
+                                # {'Thermocouple': 11,'working':True, 'temp': hw_status.thermocouples.getTC(11).getTemp() + current_pid + 0},
                             ]
                         }
+                        for i, tc_temp in enumerate(tcs):
+                            tc_values['tcList'].append(
+                                {'Thermocouple':i+1,
+                                 'working':True,
+                                 'temp':tc_temp}
+                            )
 
                     '''
                     TCs is a list of dictionaries ordered like this....
