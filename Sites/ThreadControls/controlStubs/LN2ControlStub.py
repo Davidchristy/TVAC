@@ -40,7 +40,9 @@ class LN2ControlStub(Thread):
             d_out = self.hardwareStatus.getInstance().pc_104.digital_out
             a_out.update({'LN2 Shroud': 0,'LN2 Platen': 0})
             d_out.update({'LN2-S Sol': False, 'LN2-P Sol': False, })
-            if ProfileInstance.getInstance().activeProfile and HardwareStatusInstance.getInstance().operational_vacuum:
+            if ProfileInstance.getInstance().activeProfile and \
+                    HardwareStatusInstance.getInstance().operational_vacuum and \
+                    HardwareStatusInstance.getInstance().pc_104.digital_in.chamber_closed:
                 # try and catch anything that might go wrong
                 try:
                     # some start up stuff here

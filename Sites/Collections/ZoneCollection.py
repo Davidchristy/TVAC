@@ -259,7 +259,7 @@ class ZoneCollection:
             return str({'result':str(e)})
 
 
-    def updateThermalStartTime(self, thermalStartTime):
+    def updateThermalStartTime(self, thermal_start_time):
         '''
         This is a helper function that is called either when a profile begins the
         thermal section (when it is in a vacuum) or when the the server is restarted. 
@@ -286,7 +286,7 @@ class ZoneCollection:
                 tmpStr += "{}_Temp = {},".format(zone, currentTemp)
 
         tmpStr = tmpStr[:-1]
-        sql = "UPDATE tvac.Profile_Instance set thermal_Start_Time=\"{}\",{} where thermal_Start_Time is null;".format(datetime.datetime.fromtimestamp(thermalStartTime),tmpStr)
+        sql = "UPDATE tvac.Profile_Instance set thermal_Start_Time=\"{}\",{} where thermal_Start_Time is null;".format(datetime.datetime.fromtimestamp(thermal_start_time), tmpStr)
         print(sql)
         mysql = MySQlConnect()
         try:

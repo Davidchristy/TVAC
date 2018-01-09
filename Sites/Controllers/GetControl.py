@@ -11,6 +11,7 @@ from Logging.MySql import MySQlConnect
 def get_tvac_status():
     hw = HardwareStatusInstance.getInstance()
     out = {
+        # TODO: Record data is red...
         "recordData": ProfileInstance.record_data,
         "OperationalVacuum": HardwareStatusInstance.getInstance().OperationalVacuum,
         "activeProfile": ProfileInstance.getInstance().activeProfile,
