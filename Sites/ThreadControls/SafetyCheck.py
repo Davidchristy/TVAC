@@ -9,7 +9,7 @@ from Logging.MySql import MySQlConnect
 from Logging.Logging import Logging
 
 
-def releaseHoldThread():
+def release_hold_thread():
     ProfileInstance.getInstance().inHold = False
     sql = "UPDATE System_Status SET in_hold=0;"
     mysql = MySQlConnect()
@@ -139,7 +139,7 @@ class SafetyCheck(Thread):
                             HardwareStatusInstance.getInstance().TdkLambda_Cmds.append(['Shroud Duty Cycle', 0])
                             HardwareStatusInstance.getInstance().TdkLambda_Cmds.append(['Platen Duty Cycle', 0])
 
-                            releaseHoldThread()
+                            release_hold_thread()
                         # end of max operational test
 
                         if tc.userDefined:
@@ -270,7 +270,7 @@ class SafetyCheck(Thread):
                             HardwareStatusInstance.getInstance().TdkLambda_Cmds.append(['Shroud Duty Cycle', 0])
                             HardwareStatusInstance.getInstance().TdkLambda_Cmds.append(['Platen Duty Cycle', 0])
 
-                            releaseHoldThread()
+                            release_hold_thread()
 
                         # end if vacuum in bad condintion
                     # end if root

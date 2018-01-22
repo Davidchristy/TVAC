@@ -54,6 +54,7 @@ class ThermocoupleCollection:
                 self.ValidTCs.append(tc)
         else:
             if tc in self.ValidTCs:
+                print("THERE HAS BEEN AN ERROR, TC has been disconnected")
                 self.ValidTCs.remove(tc)
             if tc not in self.InvalidTCs:
                 self.InvalidTCs.append(tc)

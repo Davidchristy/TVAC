@@ -92,7 +92,7 @@ class DigitalInContract:
         self.RoughP_On_Sw = None        # Roughing Pump is On?
         self.RoughP_On_Sw_WF = None     # Roughing Pump is On switch wiring fault.
 
-        self.chamber_closed = None      # When True the chamber is closed.
+        self.chamber_closed = True      # When True the chamber is closed.
 
     def update(self, d):
         self.__lock.acquire()

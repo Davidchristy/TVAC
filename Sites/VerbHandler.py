@@ -3,7 +3,7 @@ import json
 import sys
 import os
 
-from Controllers.PostControl import PostControl
+from Controllers import PostControl
 from Controllers import GetControl
 from ThreadControls.ThreadCollectionInstance import ThreadCollectionInstance
 
@@ -57,6 +57,7 @@ class VerbHandler(http.server.BaseHTTPRequestHandler):
                 '/getTvacStatus': GetControl.get_tvac_status,
                 '/StoprecordData': GetControl.stop_recording_data,
                 '/recordData': GetControl.record_data,
+                '/chamberDoorStatus':GetControl.chamber_door_status,
                 }[path]()
 
             Logging.logEvent("Debug","Status Update",
@@ -113,23 +114,22 @@ class VerbHandler(http.server.BaseHTTPRequestHandler):
             contractObj = json.loads(body)
 
             # Based on the path we are given, do different functions
-            control = PostControl()
+            # control = PostControl
             result = {
-                '/saveProfile': control.saveProfile,
-                '/loadProfile' : control.loadProfile,
-                '/runSingleProfile': control.runSingleProfile,
-                '/pauseZone': control.pauseSingleThread,
-                '/pauseRemoveZone': control.removePauseSingleThread,
-                '/holdZone': control.holdSingleThread,
-                '/releaseHoldZone': control.releaseHoldSingleThread,
-                '/abortZone': control.abortSingleThread,
-                '/calculateRamp': control.calculateRamp,
-                '/SendHwCmd': control.SendHwCmd,
-                '/setPC104Digital': control.setPC104_Digital,
-                '/setPC104Analog': control.setPC104_Analog,
-                '/heatUpPlaten':control.heatUpPlaten,
-                '/heatUpShroud':control.heatUpShroud,
-
+                '/saveProfile': PostControl.save_profile,
+                '/loadProfile' : PostControl.load_profile,
+                '/runSingleProfile': PostControl.run_single_profile,
+                '/pauseZone': PostControl.pause_single_thread,
+                '/pauseRemoveZone': PostControl.remove_pause_single_thread,
+                '/holdZone': PostControl.hold_single_thread,
+                '/releaseHoldZone': PostControl.release_hold_single_thread,
+                '/abortZone': PostControl.abort_single_thread,
+                '/calculateRamp': PostControl.calculate_ramp,
+                '/SendHwCmd': PostControl.send_hw_cmd,
+                '/setPC104Digital': PostControl.set_pc_104_digital,
+                '/setPC104Analog': PostControl.set_pc_104_analog,
+                '/heatUpPlaten': PostControl.heat_up_platen,
+                '/heatUpShroud': PostControl.heat_up_shroud,
             }[path](contractObj)
 
             Logging.logEvent("Debug","Status Update", 

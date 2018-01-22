@@ -73,7 +73,6 @@ class PfeifferGaugeUpdater(Thread):
                     userName = os.environ['LOGNAME']
                 else:
                     userName = "user"
-                # userName = 'root'
                 if "root" in userName:
                     self.read_all_params()
                 next_pressure_read_time = time.time()
@@ -99,7 +98,7 @@ class PfeifferGaugeUpdater(Thread):
                                                                 'cc on': self.Pgauge.GetCCstate(2)},
                                                     {'addr': 3, 'error': self.Pgauge.GetError(3)}])
                                 if __name__ != '__main__':
-                                    if ProfileInstance.record_data:
+                                    if ProfileInstance.getInstance().record_data:
                                         self.logPressureData()
                                 next_param_read_time += self.param_period
                         except ValueError as err:

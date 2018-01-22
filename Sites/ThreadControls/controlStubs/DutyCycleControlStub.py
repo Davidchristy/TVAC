@@ -456,6 +456,7 @@ class DutyCycleControlStub(Thread):
                 Logging.debugPrint(4,"DCCS: activeProfile: {}".format(ProfileInstance.getInstance().activeProfile))
                 Logging.debugPrint(4,"DCCS: OperationalVacuum: {}".format(HardwareStatusInstance.getInstance().operational_vacuum))
                 Logging.debugPrint(4,"DCCS: getActiveProfileStatus: {}".format(ProfileInstance.getInstance().zoneProfiles.getActiveProfileStatus()))
+                Logging.debugPrint(3,"Chamber Closed: {}".format(HardwareStatusInstance.getInstance().pc_104.digital_in.chamber_closed))
             # Sleeping so it doesn't busy wait
             time.sleep(1)
             # end of running check
@@ -510,7 +511,7 @@ class DutyCycleControlStub(Thread):
             zone = self.zones[zone]
             if zone.zone_profile.activeZoneProfile:
                 self.expected_time_values = create_expected_time_values(zone.zone_profile.thermalProfiles, self.updatePeriod, start_time = self.zoneProfiles.thermalStartTime)
-                self.parent.set_point_start_time = create_expected_set_start_times(zone.zone_profile.thermalProfiles, start_time = self.zoneProfiles.thermalStartTime)
+                self.set_points_start_time = create_expected_set_start_times(zone.zone_profile.thermalProfiles, start_time = self.zoneProfiles.thermalStartTime)
                 break
         return
 
@@ -655,7 +656,7 @@ class DutyCycleControlStub(Thread):
             self.expected_time_values = create_expected_time_values(zone.zone_profile.thermalProfiles,
                                                                     self.updatePeriod,
                                                                     start_time=self.zoneProfiles.thermalStartTime)
-            self.parent.set_point_start_time = create_expected_set_start_times(zone.zone_profile.thermalProfiles,
+            self.parent.set_points_start_time = create_expected_set_start_times(zone.zone_profile.thermalProfiles,
                                                                                start_time=self.zoneProfiles.thermalStartTime)
         except Exception as e:
             Logging.debugPrint(1, "DCCS: Error in check Hold, Duty Cycle: {}".format(str(e)))

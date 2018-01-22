@@ -367,4 +367,9 @@ def check_tread_status():
         return "{'error':'{}'}".format(e)
 
 
-
+def chamber_door_status():
+    try:
+        chamber_closed = HardwareStatusInstance.getInstance().pc_104.digital_in.chamber_closed
+        return "{'result':'{}'}".format(chamber_closed)
+    except Exception as e:
+        return "{'error':'{}'}".format(e)
