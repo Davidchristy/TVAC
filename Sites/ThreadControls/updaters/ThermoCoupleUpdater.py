@@ -80,9 +80,14 @@ class ThermoCoupleUpdater(Thread):
                             ]
                         }
                         for i, tc_temp in enumerate(tcs):
+                            if (tc_temp > 8) and (tc_temp < 2000):
+                                tc_working = True
+                            else:
+                                tc_working = False
+                                tc_temp = float('NaN')
                             tc_values['tcList'].append(
                                 {'Thermocouple':i+1,
-                                 'working':True,
+                                 'working':tc_working,
                                  'temp':tc_temp}
                             )
 
@@ -109,6 +114,7 @@ class ThermoCoupleUpdater(Thread):
                          "dict":tc_values['tcList']})
 
                     hw_status.thermocouples.update(tc_values)
+
 
                     time.sleep(self.SLEEP_TIME)
 

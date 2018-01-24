@@ -456,7 +456,7 @@ class DutyCycleControlStub(Thread):
                 Logging.debugPrint(4,"DCCS: activeProfile: {}".format(ProfileInstance.getInstance().activeProfile))
                 Logging.debugPrint(4,"DCCS: OperationalVacuum: {}".format(HardwareStatusInstance.getInstance().operational_vacuum))
                 Logging.debugPrint(4,"DCCS: getActiveProfileStatus: {}".format(ProfileInstance.getInstance().zoneProfiles.getActiveProfileStatus()))
-                Logging.debugPrint(3,"Chamber Closed: {}".format(HardwareStatusInstance.getInstance().pc_104.digital_in.chamber_closed))
+                Logging.debugPrint(4,"Chamber Closed: {}".format(HardwareStatusInstance.getInstance().pc_104.digital_in.chamber_closed))
             # Sleeping so it doesn't busy wait
             time.sleep(1)
             # end of running check

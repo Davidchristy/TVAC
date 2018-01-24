@@ -100,6 +100,7 @@ def send_receive(address, parm=349, data_str=None):
             resp = response.decode().strip()
         except timeout:
             pass
+            raise RuntimeError("Pfeiffer Gauge Not Replying")
 
         print("reply: \""+resp+"\"")
         if response_good(address, resp, parm):

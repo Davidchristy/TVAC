@@ -102,7 +102,7 @@ class TdkLambdaUpdater(Thread):
                             for ps in update_power_supplies:
                                 self.pwr_supply.set_addr(ps['addr'])
                                 if not self.hw.OperationalVacuum and self.hw.TdkLambda_PS.get_val(ps['addr'], 'output enable'):
-                                    debugPrint(2,"TDK, either not in vacuum, or turned off")
+                                    Logging.debugPrint(2,"TDK, either not in vacuum, or turned off")
                                     self.pwr_supply.set_out_off()
                                 ps.update(self.pwr_supply.get_status())
                                 ps.update(self.pwr_supply.get_out())

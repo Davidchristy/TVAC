@@ -79,7 +79,7 @@ class PfeifferGaugeUpdater(Thread):
                 next_param_read_time = time.time()
                 while True:
                     next_pressure_read_time += self.pressure_read_peroid
-                    if "root" in userName:
+                    if "root" in userName or True:
                         try:
                             self.gauges.update([{'addr': 1, 'Pressure': self.Pgauge.GetPressure(1)},
                                                 {'addr': 2, 'Pressure': self.Pgauge.GetPressure(2)},
@@ -90,7 +90,7 @@ class PfeifferGaugeUpdater(Thread):
                                                          "".format(self.gauges.get_cryopump_pressure(),
                                                                    self.gauges.get_chamber_pressure(),
                                                                    self.gauges.get_roughpump_pressure()),
-                                              "level": 4})
+                                              "level": 3})
                             if time.time() > next_param_read_time:
                                 self.gauges.update([{'addr': 1, 'error': self.Pgauge.GetError(1),
                                                                 'cc on': self.Pgauge.GetCCstate(1)},
@@ -110,6 +110,7 @@ class PfeifferGaugeUpdater(Thread):
                                               "line": exc_tb.tb_lineno,
                                               "thread": "PfeifferGaugeUpdater"
                                               })
+
                     else:
                         Logging.logEvent("Debug", "Status Update",
                                          {"message": "Test run of Pfeiffer Guages loop",

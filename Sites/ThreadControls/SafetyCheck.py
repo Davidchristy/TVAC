@@ -96,8 +96,43 @@ class SafetyCheck(Thread):
                         "Human Touch Alarm: High Temperature": False,
                         "Human Touch Alarm: Low Temperature": False,
                         "Pressure Loss In Profile": False,
+                        "Thermocouple Disconnected": False,
                     }
                     TCs = hardwareStatusInstance.thermocouples.ValidTCs
+
+
+                    for tc in hardwareStatusInstance.thermocouples.recently_disconnected:
+                        error_log = {
+                            "time": str(datetime.now()),
+                                "event": "Thermocouple Disconnected",
+                                "item": "Thermocouple",
+                                "itemID": tc.Thermocouple,
+                                "details": "Thermocouple lost",
+                                "actions": ["Log Event"]
+                        }
+                        self.logEvent(error_log)
+                        hardwareStatusInstance.thermocouples.recently_disconnected.remove(tc)
+                        if ProfileInstance.getInstance().activeProfile:
+                            d_out.update({"IR Lamp 1 PWM DC": 0})
+                            d_out.update({"IR Lamp 2 PWM DC": 0})
+                            d_out.update({"IR Lamp 3 PWM DC": 0})
+                            d_out.update({"IR Lamp 4 PWM DC": 0})
+                            d_out.update({"IR Lamp 5 PWM DC": 0})
+                            d_out.update({"IR Lamp 6 PWM DC": 0})
+                            d_out.update({"IR Lamp 7 PWM DC": 0})
+                            d_out.update({"IR Lamp 8 PWM DC": 0})
+                            d_out.update({"IR Lamp 9 PWM DC": 0})
+                            d_out.update({"IR Lamp 10 PWM DC": 0})
+                            d_out.update({"IR Lamp 11 PWM DC": 0})
+                            d_out.update({"IR Lamp 12 PWM DC": 0})
+                            d_out.update({"IR Lamp 13 PWM DC": 0})
+                            d_out.update({"IR Lamp 14 PWM DC": 0})
+                            d_out.update({"IR Lamp 15 PWM DC": 0})
+                            d_out.update({"IR Lamp 16 PWM DC": 0})
+
+                            HardwareStatusInstance.getInstance().TdkLambda_Cmds.append(['Shroud Duty Cycle', 0])
+                            HardwareStatusInstance.getInstance().TdkLambda_Cmds.append(['Platen Duty Cycle', 0])
+
                     for tc in TCs:
                         # if there are any TC's higher than max temp
                         if tc.temp > MAX_OPERATING_TEMP:

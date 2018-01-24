@@ -6,7 +6,6 @@ from DataContracts.ThermocoupleContract import ThermocoupleContract
 from Logging.Logging import Logging
 
 
-
 class ThermocoupleCollection:
 
     def __init__(self, num = 120):
@@ -17,6 +16,7 @@ class ThermocoupleCollection:
         self.time = datetime.now()
         self.ValidTCs = []
         self.InvalidTCs = []
+        self.recently_disconnected = []
         for tc in self.tcList:
             self.updateValidTCs(tc)
         ## TODO add alarms list
@@ -54,7 +54,7 @@ class ThermocoupleCollection:
                 self.ValidTCs.append(tc)
         else:
             if tc in self.ValidTCs:
-                print("THERE HAS BEEN AN ERROR, TC has been disconnected")
+                self.recently_disconnected.append(tc)
                 self.ValidTCs.remove(tc)
             if tc not in self.InvalidTCs:
                 self.InvalidTCs.append(tc)
