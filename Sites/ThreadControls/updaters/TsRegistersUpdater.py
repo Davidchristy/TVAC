@@ -157,9 +157,9 @@ class TsRegistersUpdater(Thread):
         MinRoughingPressure = 20e-3  # TODO: Change back to 8e-4 when done testing
         maxCrossoverPressure = 40e-3  # 40 mTorr
 
-        cryoPumpPressure = self.hw.PfeifferGuages.get_cryopump_pressure()
-        chamberPressure = self.hw.PfeifferGuages.get_chamber_pressure()
-        # roughPumpPressure = self.hw.PfeifferGuages.get_roughpump_pressure()
+        cryoPumpPressure = self.hw.pfeiffer_gauges.get_cryopump_pressure()
+        chamberPressure = self.hw.pfeiffer_gauges.get_chamber_pressure()
+        # roughPumpPressure = self.hw.pfeiffer_gauges.get_roughpump_pressure()
 
         ChamberPowerLockout = True if (chamberPressure is None) or \
                                       ((chamberPressure > arc_cutoff_pressure_low) and
@@ -168,7 +168,7 @@ class TsRegistersUpdater(Thread):
             self.da_io.digital_out.update({'C1 B2': 0x00})  # IR lamp 1-8
             self.da_io.digital_out.update({'C1 B3': 0x00})  # IR lamp 9-16
 
-        if self.hw.VacuumState is not None:
+        if self.hw.vacuum_state is not None:
             if self.da_io.digital_in.getVal('Chamber_Closed'):
                 if not self.hw.OperationalVacuum:  # Disallow heaters when not at operational vacuum.
                     self.da_io.digital_out.update({'C1 B2': 0x00})  # IR lamp 1-8

@@ -22,7 +22,7 @@ class ProfileInstance:
                 {"message": "Creating ProfileInstance",
                  "level":2})
             self.zoneProfiles = ZoneCollection(self)
-
+            self.record_data = False
 
 
             # System Wide stats

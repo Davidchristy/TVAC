@@ -199,7 +199,7 @@ if __name__ == '__main__':
     thread.daemon = True
     thread.start()
 
-    p = HardwareStatusInstance.getInstance().PfeifferGuages
+    p = HardwareStatusInstance.getInstance().pfeiffer_gauges
     while True:
         time.sleep(5)
         print(p.getJson())

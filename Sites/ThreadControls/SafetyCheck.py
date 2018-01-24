@@ -278,11 +278,11 @@ class SafetyCheck(Thread):
                     else:
                         userName = "user"
                     if "root" in userName:
-                        if vacuum and HardwareStatusInstance.getInstance().PfeifferGuages.get_chamber_pressure() > 1e-4:
+                        if vacuum and HardwareStatusInstance.getInstance().pfeiffer_gauges.get_chamber_pressure() > 1e-4:
                             d_out = HardwareStatusInstance.getInstance().PC_104.digital_out
                             ProfileInstance.getInstance().activeProfile = False
                             Logging.debugPrint(1, "ERROR Pressure is above 10^-4. ({})".format(
-                                HardwareStatusInstance.getInstance().PfeifferGuages.get_chamber_pressure()))
+                                HardwareStatusInstance.getInstance().pfeiffer_gauges.get_chamber_pressure()))
                             vacuum = False
                             # TODO: Send Error
                             d_out.update({"IR Lamp 1 PWM DC": 0})

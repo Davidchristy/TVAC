@@ -12,19 +12,19 @@ def get_tvac_status():
     hw = HardwareStatusInstance.getInstance()
     out = {
         # TODO: Record data is red...
-        "recordData": ProfileInstance.record_data,
-        "OperationalVacuum": HardwareStatusInstance.getInstance().OperationalVacuum,
+        "recordData": ProfileInstance.getInstance().record_data,
+        "OperationalVacuum": HardwareStatusInstance.getInstance().operational_vacuum,
         "activeProfile": ProfileInstance.getInstance().activeProfile,
         "vacuumWanted": ProfileInstance.getInstance().vacuumWanted,
         "currentSetpoint": ProfileInstance.getInstance().currentSetpoint,
         "inRamp": ProfileInstance.getInstance().inRamp,
         "inHold": ProfileInstance.getInstance().inHold,
         "inPause": ProfileInstance.getInstance().inPause,
-        'inCryoPumpRegen': hw.ShiCryopump.is_regen_active(),
-        'CryoPressure': hw.PfeifferGuages.get_cryopump_pressure(),
-        'ChamberPressure': hw.PfeifferGuages.get_chamber_pressure(),
-        'RoughingPressure': hw.PfeifferGuages.get_roughpump_pressure(),
-        "VacuumState": HardwareStatusInstance.getInstance().VacuumState,
+        'inCryoPumpRegen': hw.shi_cryopump.is_regen_active(),
+        'CryoPressure': hw.pfeiffer_gauges.get_cryopump_pressure(),
+        'ChamberPressure': hw.pfeiffer_gauges.get_chamber_pressure(),
+        'RoughingPressure': hw.pfeiffer_gauges.get_roughpump_pressure(),
+        "VacuumState": HardwareStatusInstance.getInstance().vacuum_state,
         }
     if not ProfileInstance.getInstance().activeProfile:
         out["inRamp"] = None
@@ -32,13 +32,13 @@ def get_tvac_status():
 
 
 def get_vacuum_state():
-    return json.dumps({"VacuumState": HardwareStatusInstance.getInstance().VacuumState})
+    return json.dumps({"VacuumState": HardwareStatusInstance.getInstance().vacuum_state})
 
 
 def abort_regen_cycle():
     try:
         hw = HardwareStatusInstance.getInstance()
-        if hw.ShiCryopump.is_regen_active():
+        if hw.shi_cryopump.is_regen_active():
             hw.Shi_MCC_Cmds.append(['Start_Regen', 0])
             return "{'result':'success'}"
         else:
@@ -50,7 +50,7 @@ def abort_regen_cycle():
 def do_regen_cycle():
     try:
         hw = HardwareStatusInstance.getInstance()
-        if not hw.ShiCryopump.is_regen_active():
+        if not hw.shi_cryopump.is_regen_active():
             hw.Shi_MCC_Cmds.append(['Start_Regen', 1])
             return "{'result':'success'}"
         else:
@@ -96,7 +96,7 @@ def get_zone_temps():
 
 
 def get_pressure_gauges():
-    gauges = HardwareStatusInstance.getInstance().PfeifferGuages
+    gauges = HardwareStatusInstance.getInstance().pfeiffer_gauges
     resp = {'CryoPressure': gauges.get_cryopump_pressure(),
             'ChamberPressure': gauges.get_chamber_pressure(),
             'RoughingPressure': gauges.get_roughpump_pressure()}
@@ -127,15 +127,15 @@ def get_pc104_digital():
 
 
 def get_cryopump_plots():
-    return HardwareStatusInstance.getInstance().ShiCryopump.get_json_plots()
+    return HardwareStatusInstance.getInstance().shi_cryopump.get_json_plots()
 
 
 def get_cryopump_params():
-    return HardwareStatusInstance.getInstance().ShiCryopump.getJson_Params()
+    return HardwareStatusInstance.getInstance().shi_cryopump.getJson_Params()
 
 
 def get_cryopump_status():
-    return HardwareStatusInstance.getInstance().ShiCryopump.getJson_Status()
+    return HardwareStatusInstance.getInstance().shi_cryopump.getJson_Status()
 
 
 def get_event_list():
@@ -155,7 +155,7 @@ def get_event_list():
 
 
 def get_shi_temps():
-    return HardwareStatusInstance.getInstance().ShiCryopump.mcc_status.get_json_plots()
+    return HardwareStatusInstance.getInstance().shi_cryopump.mcc_status.get_json_plots()
 
 
 def hard_stop():
