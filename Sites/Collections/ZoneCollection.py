@@ -232,11 +232,13 @@ class ZoneCollection:
 
         return True
 
-    def saveProfile(self,json):
+    def save_profile(self,json):
+        name="Error"
+        sql = "SELECT * FROM tvac.Thermal_Zone_Profile WHERE profile_name=\"{}\";".format(name)
         try:
             name = json["name"]
 
-            sql = "SELECT * FROM tvac.Thermal_Zone_Profile WHERE profile_name=\"{}\";".format(name)
+
             mysql = MySQlConnect()
             mysql.cur.execute(sql)
             mysql.conn.commit()

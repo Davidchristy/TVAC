@@ -72,7 +72,6 @@ class ThermoCoupleUpdater(Thread):
                             tcs.append(float(line.strip()))
                         f_tcs.close()
 
-
                         tc_values = {
                             'time': datetime.now(),
                             'tcList': [
