@@ -188,7 +188,7 @@ def main(args):
 	guage_data = {}	
 
 	print("Time to Pressure End ",time.time()-time_start)
-
+	print ('debug1')
 	if len(args)>7:
 		a=np.array(tdata_csv["time"])
 		b=np.array(tdata_csv["thermocouple"])
@@ -259,7 +259,6 @@ def main(args):
 	xg2=[]	
 	guage3=[]
 	xg3=[]
-
 	for time_value in range(0,len(pTime)):
 		#print(pTime[time_value])
 		if pGuage[time_value] == 1:
@@ -271,7 +270,7 @@ def main(args):
 		if pGuage[time_value] == 3:
 			xg3.append(pTime[time_value])
 			guage3.append(pPressure[time_value])
-
+	print('debug2')
 	fig,(ax1,ax2)=plt.subplots(1,2,figsize=(14,8),sharex=False)
 
 
@@ -286,6 +285,7 @@ def main(args):
 		except:
 			print("No TC Data")
 		#print(tc)
+
 	if expectedSelection == '1':
 		for zone in range(0,9):
 			zoneStr="zone"+str(zone+1)
@@ -330,6 +330,7 @@ def main(args):
 	ax2.set_title(pressureID)
 
 	#plt.savefig('graph1.png')
+	
 	plt.show()
 		
 
