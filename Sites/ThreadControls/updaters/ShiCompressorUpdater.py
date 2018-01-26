@@ -106,7 +106,6 @@ class ShiCompressorUpdater(Thread):
                         f_compressor.close()
 
                     HardwareStatusInstance.getInstance().shi_compressor_power = True
-                    print("shi_compressor_power == True")
                     if time.time() < next_compressor_read_time:
                         time.sleep(next_compressor_read_time - time.time())
                 #end of inner while true

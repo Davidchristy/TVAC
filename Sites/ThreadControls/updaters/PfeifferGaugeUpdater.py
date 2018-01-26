@@ -80,23 +80,6 @@ class PfeifferGaugeUpdater(Thread):
                         self.gauges.update([{'addr': 1, 'Pressure': self.Pgauge.GetPressure(1)},
                                             {'addr': 2, 'Pressure': self.Pgauge.GetPressure(2)},
                                             {'addr': 3, 'Pressure': self.Pgauge.GetPressure(3)}])
-                        Logging.logEvent("Debug", "Status Update",
-                                         {"message": "Reading and writing with PfeifferGaugeUpdater.\n"
-                                                     "Cryopump: {:f}; Chamber: {:f}; RoughPump: {:f}\n"
-                                                     "".format(self.gauges.get_cryopump_pressure(),
-                                                               self.gauges.get_chamber_pressure(),
-                                                               self.gauges.get_roughpump_pressure()),
-                                          "level": 3})
-                        if time.time() > next_param_read_time:
-                            self.gauges.update([{'addr': 1, 'error': self.Pgauge.GetError(1),
-                                                            'cc on': self.Pgauge.GetCCstate(1)},
-                                                {'addr': 2, 'error': self.Pgauge.GetError(2),
-                                                            'cc on': self.Pgauge.GetCCstate(2)},
-                                                {'addr': 3, 'error': self.Pgauge.GetError(3)}])
-                            if __name__ != '__main__':
-                                if ProfileInstance.getInstance().record_data:
-                                    self.logPressureData()
-                            next_param_read_time += self.param_period
                     else:
                         Logging.logEvent("Debug", "Status Update",
                                          {"message": "Test run of Pfeiffer Guages loop",
@@ -115,11 +98,28 @@ class PfeifferGaugeUpdater(Thread):
                                             {'addr': 2, 'Pressure': pressures[1]},
                                             {'addr': 3, 'Pressure': pressures[2]}])
                     # end test else
-
-
                     Logging.logEvent("Debug", "Status Update",
-                             {"message": "Current Pressure in Chamber is {}".format(self.gauges.get_chamber_pressure()),
-                              "level": 4})
+                                     {"message": "Reading and writing with PfeifferGaugeUpdater.\n"
+                                                 "Cryopump: {:f}; Chamber: {:f}; RoughPump: {:f}\n"
+                                                 "".format(self.gauges.get_cryopump_pressure(),
+                                                           self.gauges.get_chamber_pressure(),
+                                                           self.gauges.get_roughpump_pressure()),
+                                      "level": 3})
+                    if time.time() > next_param_read_time:
+                        if "root" in user_name:
+                            self.gauges.update([{'addr': 1, 'error': self.Pgauge.GetError(1),
+                                                 'cc on': self.Pgauge.GetCCstate(1)},
+                                                {'addr': 2, 'error': self.Pgauge.GetError(2),
+                                                 'cc on': self.Pgauge.GetCCstate(2)},
+                                                {'addr': 3, 'error': self.Pgauge.GetError(3)}])
+                        if ProfileInstance.getInstance().record_data:
+                            self.logPressureData()
+                        next_param_read_time += self.param_period
+
+                        Logging.logEvent("Debug", "Status Update",
+                                 {"message": "Current Pressure in Chamber is {}".format(self.gauges.get_chamber_pressure()),
+                                  "level": 4})
+
                     currentTime = time.time()
                     if currentTime < next_pressure_read_time:
                         time.sleep(next_pressure_read_time - currentTime)
