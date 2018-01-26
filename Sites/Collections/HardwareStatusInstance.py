@@ -48,4 +48,13 @@ class HardwareStatusInstance:
                 self.operational_vacuum = True
             self.vacuum_state = None
 
+            self.pfeiffer_gauge_power = True
+            self.shi_compressor_power = True
+            self.shi_mcc_power = True
+            self.tdk_lambda_power = True
+            self.thermocouple_power = True
+            self.pc_104_power = True
+
+
+
             HardwareStatusInstance.__instance = self

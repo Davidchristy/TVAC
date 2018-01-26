@@ -15,12 +15,6 @@ def save_profile(data):
     return profile_instance.zoneProfiles.save_profile(data)
 
 
-def run_single_profile(data):
-    thread_instance = ThreadCollectionInstance.getInstance()
-    thread_instance.threadCollection.runSingleThread(data)
-    return "{'result':'success'}"
-
-
 def pause_single_thread(data):
     threadInstance = ThreadCollectionInstance.getInstance()
     threadInstance.threadCollection.pause(data)
@@ -45,18 +39,6 @@ def release_hold_single_thread(data):
     return "{'result':'success'}"
 
 
-def abort_single_thread(data):
-    thread_instance = ThreadCollectionInstance.getInstance()
-    thread_instance.threadCollection.abortThread(data)
-    return "{'result':'success'}"
-
-
-def calculate_ramp(data):
-    thread_instance = ThreadCollectionInstance.getInstance()
-    thread_instance.threadCollection.calculate_ramp(data)
-    return "{'result':'success'}"
-
-
 def send_hw_cmd(data):
     if type(data) is not list:
         return '{"result":"Needs a json dictionary of a cmds."}'
@@ -74,7 +56,7 @@ def send_hw_cmd(data):
 
 
 def set_pc_104_digital(data):
-    pins = HardwareStatusInstance.getInstance().PC_104
+    pins = HardwareStatusInstance.getInstance().pc_104
     Logging.debugPrint(3,"POST: setPC104_Digital '%s'" % data)
     pins.digital_out.update(data)
     Logging.debugPrint(4,"Digital out data: '%s'" % pins.digital_out.getJson())
@@ -82,14 +64,14 @@ def set_pc_104_digital(data):
 
 
 def set_pc_104_analog(data):
-    pins = HardwareStatusInstance.getInstance().PC_104
+    pins = HardwareStatusInstance.getInstance().pc_104
     pins.analog_out.update(data)
     return "{'result':'success'}"
 
 
 def heat_up_shroud(data):
     duty_cycle = float(data['dutyCycle'])
-    tdk_lambda = HardwareStatusInstance.getInstance().TdkLambda_PS
+    tdk_lambda = HardwareStatusInstance.getInstance().tdk_lambda_ps
     if not ProfileInstance.getInstance().activeProfile:
         if duty_cycle == 0:
             if tdk_lambda.get_shroud_left().output_enable or tdk_lambda.get_shroud_right().output_enable:
@@ -109,7 +91,7 @@ def heat_up_shroud(data):
 
 def heat_up_platen(data):
     duty_cycle = float(data['dutyCycle'])
-    tdk_lambda = HardwareStatusInstance.getInstance().TdkLambda_PS
+    tdk_lambda = HardwareStatusInstance.getInstance().tdk_lambda_ps
     if not ProfileInstance.getInstance().activeProfile:
         if duty_cycle == 0:
             if tdk_lambda.get_platen_left().output_enable or tdk_lambda.get_platen_right().output_enable:

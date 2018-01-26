@@ -87,13 +87,13 @@ def send_receive(address, parm=349, data_str=None):
         ip = 'localhost'
         if data_str is None:
             tmp = gen_cmd_read(address, parm).encode()
-            print("messing sending: {}".format(tmp))
+            # print("messing sending: {}".format(tmp))
             a.sendto(tmp, (ip, 1234))
-            print("after send")
+            # print("after send")
         else:
             a.sendto(gen_cmd_write(address, parm, data_str).encode(), (ip, 1234))
         time.sleep(0.060 * (tries + 1))
-        print("about to wait for reply")
+        # print("about to wait for reply")
         resp = ""
         try:
             response,_ = a.recvfrom(4092)

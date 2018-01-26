@@ -16,6 +16,7 @@ class VerbHandler(http.server.BaseHTTPRequestHandler):
         Logging.logEvent("Debug","Status Update", 
             {"message": "Received GET Request",
              "level":1})
+        path="NULL"
         try:
             path = self.path
 
@@ -24,10 +25,8 @@ class VerbHandler(http.server.BaseHTTPRequestHandler):
                  "level":2})
 
             # Based on the path we are given, do different functions
-            # control = GetControl()
             result = {
                 '/runProfile': GetControl.run_profile,
-                '/checkZoneStatus': GetControl.check_tread_status,
                 '/getAllThermoCoupleData': GetControl.get_all_thermocouple_data,
                 '/getAllZoneData': GetControl.get_all_zone_data,
                 '/getShiTemps': GetControl.get_shi_temps,
@@ -58,6 +57,7 @@ class VerbHandler(http.server.BaseHTTPRequestHandler):
                 '/StoprecordData': GetControl.stop_recording_data,
                 '/recordData': GetControl.record_data,
                 '/chamberDoorStatus':GetControl.chamber_door_status,
+                "/getSystemPower":GetControl.get_system_power,
                 }[path]()
 
             Logging.logEvent("Debug","Status Update",
@@ -118,13 +118,10 @@ class VerbHandler(http.server.BaseHTTPRequestHandler):
             result = {
                 '/saveProfile': PostControl.save_profile,
                 '/loadProfile' : PostControl.load_profile,
-                '/runSingleProfile': PostControl.run_single_profile,
                 '/pauseZone': PostControl.pause_single_thread,
                 '/pauseRemoveZone': PostControl.remove_pause_single_thread,
                 '/holdZone': PostControl.hold_single_thread,
                 '/releaseHoldZone': PostControl.release_hold_single_thread,
-                '/abortZone': PostControl.abort_single_thread,
-                '/calculateRamp': PostControl.calculate_ramp,
                 '/SendHwCmd': PostControl.send_hw_cmd,
                 '/setPC104Digital': PostControl.set_pc_104_digital,
                 '/setPC104Analog': PostControl.set_pc_104_analog,

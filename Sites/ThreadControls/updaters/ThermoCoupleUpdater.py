@@ -114,10 +114,13 @@ class ThermoCoupleUpdater(Thread):
 
                     hw_status.thermocouples.update(tc_values)
 
+                    hw_status.thermocouple_power = True
+
 
                     time.sleep(self.SLEEP_TIME)
 
             except Exception as e:
+                HardwareStatusInstance.getInstance().thermocouple_power = False
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                 Logging.logEvent("Error","Hardware Interface Thread",

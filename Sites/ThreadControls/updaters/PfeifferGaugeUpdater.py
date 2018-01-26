@@ -57,10 +57,7 @@ class PfeifferGaugeUpdater(Thread):
                 raise e
 
     def run(self):
-        '''
-        '''
-        # used for testing
-        first = True
+
         while True:
             # While true to restart the thread if it errors out
             try:
@@ -70,71 +67,55 @@ class PfeifferGaugeUpdater(Thread):
                                  "level": 2})
 
                 if os.name == "posix":
-                    userName = os.environ['LOGNAME']
+                    user_name = os.environ['LOGNAME']
                 else:
-                    userName = "user"
-                if "root" in userName:
+                    user_name = "user"
+                if "root" in user_name:
                     self.read_all_params()
                 next_pressure_read_time = time.time()
                 next_param_read_time = time.time()
                 while True:
                     next_pressure_read_time += self.pressure_read_peroid
-                    if "root" in userName or True:
-                        try:
-                            self.gauges.update([{'addr': 1, 'Pressure': self.Pgauge.GetPressure(1)},
-                                                {'addr': 2, 'Pressure': self.Pgauge.GetPressure(2)},
-                                                {'addr': 3, 'Pressure': self.Pgauge.GetPressure(3)}])
-                            Logging.logEvent("Debug", "Status Update",
-                                             {"message": "Reading and writing with PfeifferGaugeUpdater.\n"
-                                                         "Cryopump: {:f}; Chamber: {:f}; RoughPump: {:f}\n"
-                                                         "".format(self.gauges.get_cryopump_pressure(),
-                                                                   self.gauges.get_chamber_pressure(),
-                                                                   self.gauges.get_roughpump_pressure()),
-                                              "level": 3})
-                            if time.time() > next_param_read_time:
-                                self.gauges.update([{'addr': 1, 'error': self.Pgauge.GetError(1),
-                                                                'cc on': self.Pgauge.GetCCstate(1)},
-                                                    {'addr': 2, 'error': self.Pgauge.GetError(2),
-                                                                'cc on': self.Pgauge.GetCCstate(2)},
-                                                    {'addr': 3, 'error': self.Pgauge.GetError(3)}])
-                                if __name__ != '__main__':
-                                    if ProfileInstance.getInstance().record_data:
-                                        self.logPressureData()
-                                next_param_read_time += self.param_period
-                        except ValueError as err:
-                            exc_type, exc_obj, exc_tb = sys.exc_info()
-                            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                            Logging.logEvent("Error", 'Error in PfeifferGaugeUpdater reading values: "%s"' % err,
-                                             {"type": exc_type,
-                                              "filename": fname,
-                                              "line": exc_tb.tb_lineno,
-                                              "thread": "PfeifferGaugeUpdater"
-                                              })
-
+                    if "root" in user_name:
+                        self.gauges.update([{'addr': 1, 'Pressure': self.Pgauge.GetPressure(1)},
+                                            {'addr': 2, 'Pressure': self.Pgauge.GetPressure(2)},
+                                            {'addr': 3, 'Pressure': self.Pgauge.GetPressure(3)}])
+                        Logging.logEvent("Debug", "Status Update",
+                                         {"message": "Reading and writing with PfeifferGaugeUpdater.\n"
+                                                     "Cryopump: {:f}; Chamber: {:f}; RoughPump: {:f}\n"
+                                                     "".format(self.gauges.get_cryopump_pressure(),
+                                                               self.gauges.get_chamber_pressure(),
+                                                               self.gauges.get_roughpump_pressure()),
+                                          "level": 3})
+                        if time.time() > next_param_read_time:
+                            self.gauges.update([{'addr': 1, 'error': self.Pgauge.GetError(1),
+                                                            'cc on': self.Pgauge.GetCCstate(1)},
+                                                {'addr': 2, 'error': self.Pgauge.GetError(2),
+                                                            'cc on': self.Pgauge.GetCCstate(2)},
+                                                {'addr': 3, 'error': self.Pgauge.GetError(3)}])
+                            if __name__ != '__main__':
+                                if ProfileInstance.getInstance().record_data:
+                                    self.logPressureData()
+                            next_param_read_time += self.param_period
                     else:
                         Logging.logEvent("Debug", "Status Update",
                                          {"message": "Test run of Pfeiffer Guages loop",
                                           "level": 4})
-                        if first:
-                            # TODO: Test the system at differnt starting pressures, it could restart at any point
-                            # What happens when pressure in roughing  is more than cryo?
-                            self.gauges.update([{'addr': 1, 'Pressure': 1000},
-                                                {'addr': 2, 'Pressure': 0.001},
-                                                {'addr': 3, 'Pressure': 999}])
-                            first = False
-                            goingUp = False
-                        else:
-                            if True or self.gauges.get_chamber_pressure() > 0.0000001 and not goingUp:
-                                self.gauges.update([{'addr': 1, 'Pressure': self.gauges.get_cryopump_pressure()/2.5},
-                                                             {'addr': 2, 'Pressure': self.gauges.get_chamber_pressure()/5},
-                                                             {'addr': 3, 'Pressure': self.gauges.get_roughpump_pressure()/3}])
-                            else:
-                                goingUp = True
-                                self.gauges.update([{'addr': 1, 'Pressure': self.gauges.get_cryopump_pressure()*2.5},
-                                                             {'addr': 2, 'Pressure': self.gauges.get_chamber_pressure()*5},
-                                                             {'addr': 3, 'Pressure': self.gauges.get_roughpump_pressure()*3}])
-                        # Just to see the screen for longer
-                        time.sleep(5)
+
+                        f_pressures = open("../virtualized/hw-files/pressure.txt", "r")
+                        pressures = []
+                        for line in f_pressures:
+                            pressures.append(float(line.strip()))
+                        f_pressures.close()
+
+                        # self.gauges.update([{'addr': 1, 'Pressure': 1000},
+                        #                     {'addr': 2, 'Pressure': 0.001},
+                        #                     {'addr': 3, 'Pressure': 999}])
+                        self.gauges.update([{'addr': 1, 'Pressure': pressures[0]},
+                                            {'addr': 2, 'Pressure': pressures[1]},
+                                            {'addr': 3, 'Pressure': pressures[2]}])
+                    # end test else
+
 
                     Logging.logEvent("Debug", "Status Update",
                              {"message": "Current Pressure in Chamber is {}".format(self.gauges.get_chamber_pressure()),
@@ -143,8 +124,11 @@ class PfeifferGaugeUpdater(Thread):
                     if currentTime < next_pressure_read_time:
                         time.sleep(next_pressure_read_time - currentTime)
 
+                    HardwareStatusInstance.getInstance().pfeiffer_gauge_power = True
+                # End inner while True
+            # End try
             except Exception as e:
-                # FileCreation.pushFile("Error",self.zoneUUID,'{"errorMessage":"%s"}'%(e))
+                HardwareStatusInstance.getInstance().pfeiffer_gauge_power = False
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                 Logging.logEvent("Error", "Pfeiffer Interface Thread",
@@ -160,6 +144,9 @@ class PfeifferGaugeUpdater(Thread):
                 if Logging.debug:
                     raise e
                 time.sleep(4)
+            #end Except
+        #end outer while true
+    # end run()
 
     def read_all_params(self):
         paramslist = [{'addr': 1,
