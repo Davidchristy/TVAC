@@ -11,7 +11,6 @@ from Logging.MySql import MySQlConnect
 def get_tvac_status():
     hw = HardwareStatusInstance.getInstance()
     out = {
-        # TODO: Record data is red...
         "recordData": ProfileInstance.getInstance().record_data,
         "OperationalVacuum": HardwareStatusInstance.getInstance().operational_vacuum,
         "activeProfile": ProfileInstance.getInstance().activeProfile,
@@ -104,20 +103,20 @@ def get_pressure_gauges():
 
 
 def get_pc104_analog():
-    pins = HardwareStatusInstance.getInstance().PC_104
+    pins = HardwareStatusInstance.getInstance().pc_104
     return '{"out":%s,"in":%s}' % (pins.analog_out.getJson(),
                                    pins.analog_in.getJson())
 
 
 def get_pc104_switches():
-    pins = HardwareStatusInstance.getInstance().PC_104
+    pins = HardwareStatusInstance.getInstance().pc_104
     return '{"in sw":%s,"sw wf":%s}' % (
         pins.digital_in.getJson_Switches(),
         pins.digital_in.getJson_Switches_WF())
 
 
 def get_pc104_digital():
-    pins = HardwareStatusInstance.getInstance().PC_104
+    pins = HardwareStatusInstance.getInstance().pc_104
     return '{"out":%s,"in bits":%s,"in sw":%s,"sw wf":%s}' % (
         pins.digital_out.getJson(),
         pins.digital_in.getJson_bits(),
@@ -161,7 +160,7 @@ def get_shi_temps():
 def hard_stop():
     try:
         Logging.debugPrint(1,"Hard stop has been called")
-        d_out = HardwareStatusInstance.getInstance().PC_104.digital_out
+        d_out = HardwareStatusInstance.getInstance().pc_104.digital_out
         ProfileInstance.getInstance().activeProfile = False
         d_out.update({"IR Lamp 1 PWM DC": 0})
         d_out.update({"IR Lamp 2 PWM DC": 0})
@@ -225,7 +224,7 @@ def stop_roughing_pump():
     try:
         profile = ProfileInstance.getInstance()
         if not profile.activeProfile:
-            pins = HardwareStatusInstance.getInstance().PC_104.digital_out
+            pins = HardwareStatusInstance.getInstance().pc_104.digital_out
             pins.update({'RoughP GateValve': False})
             # wait here until the valve is closed
             time.sleep(5)
@@ -249,11 +248,11 @@ def stop_cryopump():
             mysql.cur.execute(sql)
             mysql.conn.commit()
             hw = HardwareStatusInstance.getInstance()
-            hw.PC_104.digital_out.update({'CryoP GateValve': False})
+            hw.pc_104.digital_out.update({'CryoP GateValve': False})
             time.sleep(5)
             # TODO: Wait until gate is closed
-            hw.Shi_MCC_Cmds.append(['Turn_CryoPumpOff'])
-            hw.Shi_Compressor_Cmds.append('off')
+            hw.shi_mcc_cmds.append(['Turn_CryoPumpOff'])
+            hw.shi_compressor_cmds.append('off')
             return "{'result':'success'}"
         else:
             return "{'result':'Not Changed: Active Profile Running.'}"
@@ -272,7 +271,7 @@ def stop_cryopumping_chamber():
             mysql.cur.execute(sql)
             mysql.conn.commit()
 
-            HardwareStatusInstance.getInstance().PC_104.digital_out.update({'CryoP GateValve': False})
+            HardwareStatusInstance.getInstance().pc_104.digital_out.update({'CryoP GateValve': False})
             profile.vacuumWanted = False
             return "{'result':'success'}"
         else:
@@ -357,19 +356,24 @@ def put_under_vacuum():
         Logging.debugPrint(1, "Error in ThreadCollection, holdThread: {}".format(str(e)))
         return "{'error':'{}'}".format(e)
 
-
-def check_tread_status():
-    try:
-        thread_instance = ThreadCollectionInstance.getInstance()
-        thread_instance.threadCollection.checkThreadStatus()
-        return "{'result':'success'}"
-    except Exception as e:
-        return "{'error':'{}'}".format(e)
-
-
 def chamber_door_status():
     try:
         chamber_closed = HardwareStatusInstance.getInstance().pc_104.digital_in.chamber_closed
-        return "{'result':'{}'}".format(chamber_closed)
+
+        return "{'result':'" + str(chamber_closed) + "'}"
     except Exception as e:
         return "{'error':'{}'}".format(e)
+
+def get_system_power():
+    message = []
+    message.append('{')
+    message.append('"pfeiffer_gauge":"{}"'.format(HardwareStatusInstance.getInstance().pfeiffer_gauge_power))
+    message.append('"shi_compressor":"{}"'.format(HardwareStatusInstance.getInstance().shi_compressor_power))
+    message.append('"shi_mcc":"{}"'.format(HardwareStatusInstance.getInstance().shi_mcc_power))
+    message.append('"tdk_lambda":"{}"'.format(HardwareStatusInstance.getInstance().tdk_lambda_power))
+    message.append('"thermocouple":"{}"'.format(HardwareStatusInstance.getInstance().thermocouple_power))
+    message.append('"pc_104":"{}"'.format(HardwareStatusInstance.getInstance().pc_104_power))
+    message.append('}')
+    return ''.join(message)
+
+

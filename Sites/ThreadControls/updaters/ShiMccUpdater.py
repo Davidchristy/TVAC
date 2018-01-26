@@ -48,10 +48,10 @@ class ShiMccUpdater(Thread):
                                     {"message": "Power on the Shi Mcc",
                                     "level": 3})
                     self.mcc.open_port()
-                    while self.hw.PC_104.digital_out.getVal('CryoP Pwr Relay 1') is None:
+                    while self.hw.pc_104.digital_out.getVal('CryoP Pwr Relay 1') is None:
                         time.sleep(1)
-                    Currently_powered = self.hw.PC_104.digital_out.getVal('MCC2 Power')
-                    self.hw.PC_104.digital_out.update({'MCC2 Power': True})
+                    Currently_powered = self.hw.pc_104.digital_out.getVal('MCC2 Power')
+                    self.hw.pc_104.digital_out.update({'MCC2 Power': True})
                     if not Currently_powered:
                         time.sleep(5)
                     self.mcc.flush_port()
@@ -82,114 +82,113 @@ class ShiMccUpdater(Thread):
                 while True:
                     next_mcc_read_time = time.time() + self.mcc_read_period
                     if "root" in userName:
-                        try:
+                        self.hw.shi_mcc_power = self.hw.pc_104.digital_out.getVal('MCC2 Power')
+                        Logging.logEvent("Debug", "Status Update",
+                                         {"message": "Reading and writing with ShiMccUpdater.",
+                                          "level": 4})
+                        val = self.mcc.get_Status()
+                        if val['Error']:
                             Logging.logEvent("Debug", "Status Update",
-                                             {"message": "Reading and writing with ShiMccUpdater.",
+                                             {"message": "Shi MCC Error Response: %s" % val['Response'],
                                               "level": 4})
-                            val = self.mcc.get_Status()
+                        else:
+                            self.hw.ShiCryopump.update({'MCC Status': val['Response']})
+                        Logging.logEvent("Debug", "Status Update",
+                                         {"message": "Cryopump Stage 1: {:.1f}K; Stage 2: {:.1f}K"
+                                                     "".format(self.hw.ShiCryopump.get_mcc_status('Stage 1 Temp'),
+                                                               self.hw.ShiCryopump.get_mcc_status('Stage 2 Temp')),
+                                          "level": 4})
+                        if time.time() > next_param_read_time:
+                            val = self.mcc.get_ParamValues()
                             if val['Error']:
                                 Logging.logEvent("Debug", "Status Update",
                                                  {"message": "Shi MCC Error Response: %s" % val['Response'],
                                                   "level": 4})
                             else:
-                                self.hw.ShiCryopump.update({'MCC Status': val['Response']})
-                            Logging.logEvent("Debug", "Status Update",
-                                             {"message": "Cryopump Stage 1: {:.1f}K; Stage 2: {:.1f}K"
-                                                         "".format(self.hw.ShiCryopump.get_mcc_status('Stage 1 Temp'),
-                                                                   self.hw.ShiCryopump.get_mcc_status('Stage 2 Temp')),
-                                              "level": 4})
-                            if time.time() > next_param_read_time:
-                                val = self.mcc.get_ParamValues()
+                                self.hw.ShiCryopump.update({'MCC Params': val['Response']})
+                            next_param_read_time = time.time() + self.param_period
+
+                        while len(self.hw.Shi_MCC_Cmds):
+                            cmd = self.hw.Shi_MCC_Cmds.pop()
+                            if 'FirstStageTempCTL' == cmd[0]:  # 2.9 • First Stage Temperature Control pg:10
+                                self.run_set_cmd(self.mcc.Set_FirstStageTempCTL, cmd)
+                                self.run_get_cmd(self.mcc.Get_FirstStageTempCTL,
+                                                 "First Stage Temp CTL")
+                            elif 'PowerFailureRecovery' == cmd[0]:  # 2.12 • Power Failure Recovery pg:11
+                                self.run_set_cmd(self.mcc.Set_PowerFailureRecovery, cmd)
+                                self.run_get_cmd(self.mcc.Get_PowerFailureRecovery,
+                                                 "Power Failure Recovery")
+                            elif 'Turn_CryoPumpOn' == cmd[0]:  # 2.14 • Pump On/Off/Query pg:13
+                                self.run_set_cmd(self.mcc.Turn_CryoPumpOn, cmd)
+                            elif 'Turn_CryoPumpOff' == cmd[0]:  # 2.14 • Pump On/Off/Query pg:13
+                                self.run_set_cmd(self.mcc.Turn_CryoPumpOff, cmd)
+                            elif 'Close_PurgeValve' == cmd[0]:  # 2.15 • Purge On/Off/Query pg:14
+                                self.run_set_cmd(self.mcc.Close_PurgeValve, cmd)
+                            elif 'Open_PurgeValve' == cmd[0]:  # 2.15 • Purge On/Off/Query pg:14
+                                if self.hw.pc_104.digital_in.getVal('CryoP_GV_Closed'):
+                                    self.run_set_cmd(self.mcc.Open_PurgeValve, cmd)
+                                else:
+                                    Logging.logEvent("Debug", "Status Update",
+                                             {"message": 'Cryopump Gate Valve not closed. Purge valve not opened.',
+                                              "level": 2})
+                            elif 'Start_Regen' == cmd[0]:  # 2.16 • Regeneration pg:14
+                                self.run_set_cmd(self.mcc.Start_Regen, cmd)
+                                Logging.logEvent("Event", "Cryopump Regeneration",
+                                                 {"message": "Cryopump regeneration starting",
+                                                  "ProfileInstance": ProfileInstance.getInstance()})
+                            elif 'Set_RegenParam' == cmd[0]:  # 2.19 • Regeneration Parameters pg:16
+                                self.run_set_cmd(self.mcc.Set_RegenParam, cmd)
+                                val = self.mcc.Get_RegenParam(cmd[1])
                                 if val['Error']:
                                     Logging.logEvent("Debug", "Status Update",
-                                                     {"message": "Shi MCC Error Response: %s" % val['Response'],
-                                                      "level": 4})
+                                         {"message": 'Shi MCC GetRegenParam_%s" Error Response: %s' % (cmd[1], val),
+                                          "level": 4})
                                 else:
-                                    self.hw.ShiCryopump.update({'MCC Params': val['Response']})
-                                next_param_read_time = time.time() + self.param_period
+                                    self.hw.ShiCryopump.update({'MCC Params': {"Regen Param_%s" % cmd[1]: val['Data']}})
+                            elif 'RegenStartDelay' == cmd[0]:  # 2.21 • Regeneration Start Delay pg.18
+                                self.run_set_cmd(self.mcc.Set_RegenStartDelay, cmd)
+                                self.run_get_cmd(self.mcc.Get_RegenStartDelay, "Regen Start Delay")
+                            elif 'Open_RoughingValve' == cmd[0]:  # 2.24 • Rough On/Off/Query pg:19
+                                self.run_set_cmd(self.mcc.Open_RoughingValve, cmd)
+                            elif 'Close_RoughingValve' == cmd[0]:  # 2.24 • Rough On/Off/Query pg:19
+                                self.run_set_cmd(self.mcc.Close_RoughingValve, cmd)
+                            elif 'Clear_RoughingInterlock' == cmd[0]:  # 2.25 • Rough Valve Interlock pg:20
+                                self.run_set_cmd(self.mcc.Clear_RoughingInterlock, cmd)
+                            elif 'SecondStageTempCTL' == cmd[0]:  # 2.27 • Second Stage Temperature Control pg:21
+                                self.run_set_cmd(self.mcc.Set_SecondStageTempCTL, cmd)
+                                self.run_get_cmd(self.mcc.Get_SecondStageTempCTL,
+                                                 "Second Stage Temp CTL")
+                            elif 'Turn_TcPressureOn' == cmd[0]:  # 2.29 • TC On/Off/Query pg:22
+                                self.run_set_cmd(self.mcc.Turn_TcPressureOn, cmd)
+                            elif 'Turn_TcPressureOff' == cmd[0]:  # 2.29 • TC On/Off/Query pg:22
+                                self.run_set_cmd(self.mcc.Turn_TcPressureOff, cmd)
 
-                            while len(self.hw.Shi_MCC_Cmds):
-                                cmd = self.hw.Shi_MCC_Cmds.pop()
-                                if 'FirstStageTempCTL' == cmd[0]:  # 2.9 • First Stage Temperature Control pg:10
-                                    self.run_set_cmd(self.mcc.Set_FirstStageTempCTL, cmd)
-                                    self.run_get_cmd(self.mcc.Get_FirstStageTempCTL,
-                                                     "First Stage Temp CTL")
-                                elif 'PowerFailureRecovery' == cmd[0]:  # 2.12 • Power Failure Recovery pg:11
-                                    self.run_set_cmd(self.mcc.Set_PowerFailureRecovery, cmd)
-                                    self.run_get_cmd(self.mcc.Get_PowerFailureRecovery,
-                                                     "Power Failure Recovery")
-                                elif 'Turn_CryoPumpOn' == cmd[0]:  # 2.14 • Pump On/Off/Query pg:13
-                                    self.run_set_cmd(self.mcc.Turn_CryoPumpOn, cmd)
-                                elif 'Turn_CryoPumpOff' == cmd[0]:  # 2.14 • Pump On/Off/Query pg:13
-                                    self.run_set_cmd(self.mcc.Turn_CryoPumpOff, cmd)
-                                elif 'Close_PurgeValve' == cmd[0]:  # 2.15 • Purge On/Off/Query pg:14
-                                    self.run_set_cmd(self.mcc.Close_PurgeValve, cmd)
-                                elif 'Open_PurgeValve' == cmd[0]:  # 2.15 • Purge On/Off/Query pg:14
-                                    if self.hw.PC_104.digital_in.getVal('CryoP_GV_Closed'):
-                                        self.run_set_cmd(self.mcc.Open_PurgeValve, cmd)
-                                    else:
-                                        Logging.logEvent("Debug", "Status Update",
-                                                 {"message": 'Cryopump Gate Valve not closed. Purge valve not opened.',
-                                                  "level": 2})
-                                elif 'Start_Regen' == cmd[0]:  # 2.16 • Regeneration pg:14
-                                    self.run_set_cmd(self.mcc.Start_Regen, cmd)
-                                    Logging.logEvent("Event", "Cryopump Regeneration",
-                                                     {"message": "Cryopump regeneration starting",
-                                                      "ProfileInstance": ProfileInstance.getInstance()})
-                                elif 'Set_RegenParam' == cmd[0]:  # 2.19 • Regeneration Parameters pg:16
-                                    self.run_set_cmd(self.mcc.Set_RegenParam, cmd)
-                                    val = self.mcc.Get_RegenParam(cmd[1])
-                                    if val['Error']:
-                                        Logging.logEvent("Debug", "Status Update",
-                                             {"message": 'Shi MCC GetRegenParam_%s" Error Response: %s' % (cmd[1], val),
-                                              "level": 4})
-                                    else:
-                                        self.hw.ShiCryopump.update({'MCC Params': {"Regen Param_%s" % cmd[1]: val['Data']}})
-                                elif 'RegenStartDelay' == cmd[0]:  # 2.21 • Regeneration Start Delay pg.18
-                                    self.run_set_cmd(self.mcc.Set_RegenStartDelay, cmd)
-                                    self.run_get_cmd(self.mcc.Get_RegenStartDelay, "Regen Start Delay")
-                                elif 'Open_RoughingValve' == cmd[0]:  # 2.24 • Rough On/Off/Query pg:19
-                                    self.run_set_cmd(self.mcc.Open_RoughingValve, cmd)
-                                elif 'Close_RoughingValve' == cmd[0]:  # 2.24 • Rough On/Off/Query pg:19
-                                    self.run_set_cmd(self.mcc.Close_RoughingValve, cmd)
-                                elif 'Clear_RoughingInterlock' == cmd[0]:  # 2.25 • Rough Valve Interlock pg:20
-                                    self.run_set_cmd(self.mcc.Clear_RoughingInterlock, cmd)
-                                elif 'SecondStageTempCTL' == cmd[0]:  # 2.27 • Second Stage Temperature Control pg:21
-                                    self.run_set_cmd(self.mcc.Set_SecondStageTempCTL, cmd)
-                                    self.run_get_cmd(self.mcc.Get_SecondStageTempCTL,
-                                                     "Second Stage Temp CTL")
-                                elif 'Turn_TcPressureOn' == cmd[0]:  # 2.29 • TC On/Off/Query pg:22
-                                    self.run_set_cmd(self.mcc.Turn_TcPressureOn, cmd)
-                                elif 'Turn_TcPressureOff' == cmd[0]:  # 2.29 • TC On/Off/Query pg:22
-                                    self.run_set_cmd(self.mcc.Turn_TcPressureOff, cmd)
-
-                                else:
-                                    Logging.logEvent("Error", 'Unknown Shi_MCC_Cmd: "%s"' % cmd[0],
-                                                     {"type": 'Unknown Shi_MCC_Cmd',
-                                                      "filename": 'ThreadControls/ShiMccUpdater.py',
-                                                      "line": 0,
-                                                      "thread": "ShiMccUpdater"
-                                                      })
-                        except ValueError as err:
-                            exc_type, exc_obj, exc_tb = sys.exc_info()
-                            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                            Logging.logEvent("Error", 'Error in ShiMccUpdater reading values: "%s"' % err,
-                                             {"type": exc_type,
-                                              "filename": fname,
-                                              "line": exc_tb.tb_lineno,
-                                              "thread": "ShiMccUpdater"
-                                              })
-                            if Logging.debug:
-                                raise err
+                            else:
+                                Logging.logEvent("Error", 'Unknown Shi_MCC_Cmd: "%s"' % cmd[0],
+                                                 {"type": 'Unknown Shi_MCC_Cmd',
+                                                  "filename": 'ThreadControls/ShiMccUpdater.py',
+                                                  "line": 0,
+                                                  "thread": "ShiMccUpdater"
+                                                  })
+                            #End of else
+                        #end of while MCC_cmds
                     else:
                         Logging.logEvent("Debug", "Status Update",
                                          {"message": "Test run of Shi MCC loop",
                                           "level": 4})
 
+                        f_mcc = open("../virtualized/hw-files/shi_mcc.txt", "r")
+                        mcc = []
+                        for line in f_mcc:
+                            mcc.append(float(line.strip()))
+                        f_mcc.close()
+
+                    self.hw.shi_mcc_power = True
                     if time.time() < next_mcc_read_time:
                         time.sleep(next_mcc_read_time - time.time())
 
             except Exception as e:
+                self.hw.shi_mcc_power = False
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                 Logging.logEvent("Error", "Shi MCC Interface Thread",
@@ -204,7 +203,8 @@ class ShiMccUpdater(Thread):
                                   "level": 1})
                 if Logging.debug:
                     raise e
-                self.mcc.close_port()
+                if "root" in userName:
+                    self.mcc.close_port()
                 time.sleep(4)
 
     def run_set_cmd(self, fun, cmd):
@@ -245,7 +245,7 @@ if __name__ == '__main__':
          "level":1})
 
     hw_status = HardwareStatusInstance.getInstance()
-    hw_status.PC_104.digital_out.update({'MCC2 Power': True})
+    hw_status.pc_104.digital_out.update({'MCC2 Power': True})
 
     thread = ShiMccUpdater()
     thread.daemon = True

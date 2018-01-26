@@ -27,7 +27,6 @@ class TsRegistersUpdater(Thread):
         self.hw = HardwareStatusInstance.getInstance()
         self.adc_period = 0.0125  # adc_clock*8 = 0.1s loop period
         self.pwm_period = 10  # 10 second pwm period
-        # self.pwm_min_dc_sec = 1  # minimum Duty Cycle of 1 second
         self.ir_lamp_pwm = []
         self.time_test = time.time()
         self.parent = parent
@@ -85,15 +84,18 @@ class TsRegistersUpdater(Thread):
                         self.ts_reg.dac_write(self.da_io.analog_out.get_dac_counts(2), 2)
                         self.ts_reg.dac_write(self.da_io.analog_out.get_dac_counts(3), 3)
                         # self.read_analog_in()  # loop period is adc_period * 2 seconds
-                        self.wait_for_next_Multipule(self.adc_period * 8)
+                        self.wait_for_next_multipule(self.adc_period * 8)
                     else:
                         Logging.logEvent("Debug","Status Update", 
                            {"message": "Test run of PC 104 loop",
                              "level":5})
                         time.sleep(5)
 
+                    HardwareStatusInstance.getInstance().pc_104_power = True
+                #end inner while true
+            # End try
             except Exception as e:
-                # FileCreation.pushFile("Error",self.zoneUUID,'{"errorMessage":"%s"}'%(e))
+                HardwareStatusInstance.getInstance().pc_104_power = False
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                 Logging.logEvent("Error","Hardware Interface Thread", 
@@ -116,9 +118,11 @@ class TsRegistersUpdater(Thread):
                 if "root" in userName:
                     self.ts_reg.close()
                 time.sleep(4)
-                #raise (e)
+            #end except
+        #End outter while true
+    # End run
 
-    def wait_for_next_Multipule(self, m):  # m in seconds
+    def wait_for_next_multipule(self, m):  # m in seconds
         sleep_time = self.time_test - time.time()
         if sleep_time > 0:
             time.sleep(sleep_time)
@@ -179,7 +183,7 @@ class TsRegistersUpdater(Thread):
                     self.da_io.digital_out.update({'CryoP GateValve': False})
                 if chamberPressure < (cryoPumpPressure*0.1):
                     self.da_io.digital_out.update({'CryoP GateValve': False})
-                if not self.hw.PC_104.digital_in.getVal('CryoP_GV_Closed'):
+                if not self.hw.pc_104.digital_in.getVal('CryoP_GV_Closed'):
                     self.da_io.digital_out.update({'RoughP GateValve': False})
                 if self.da_io.digital_out.getVal('RoughP GateValve'):
                     self.da_io.digital_out.update({'CryoP GateValve': False})

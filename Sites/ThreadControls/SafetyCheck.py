@@ -23,6 +23,17 @@ def release_hold_thread():
             raise e
 
 
+def power_failure():
+    results = True
+    results = results and HardwareStatusInstance.getInstance().pfeiffer_gauge_power
+    results = results and HardwareStatusInstance.getInstance().shi_compressor_power
+    results = results and HardwareStatusInstance.getInstance().shi_mcc_power
+    results = results and HardwareStatusInstance.getInstance().tdk_lambda_power
+    results = results and HardwareStatusInstance.getInstance().thermocouple_power
+    results = results and HardwareStatusInstance.getInstance().pc_104_power
+    return not results
+
+
 class SafetyCheck(Thread):
     """
     SafetyCheck is the thread that runs the sainty and safety checks over the system.
@@ -46,6 +57,8 @@ class SafetyCheck(Thread):
                 "Human Touch Alarm: High Temperature": False,
                 "Human Touch Alarm: Low Temperature": False,
                 "Raised Pressure While Testing": False,
+                "Thermocouple Disconnected": False,
+                "Power Loss": False
             }
 
             self.MAX_UUT_TEMP = {}
@@ -97,9 +110,20 @@ class SafetyCheck(Thread):
                         "Human Touch Alarm: Low Temperature": False,
                         "Pressure Loss In Profile": False,
                         "Thermocouple Disconnected": False,
+                        "Power Loss": False
                     }
                     TCs = hardwareStatusInstance.thermocouples.ValidTCs
 
+                    if power_failure():
+                        error_log = {
+                            "time": str(datetime.now()),
+                                "event": "Power Loss",
+                                "item": "Unknown",
+                                "itemID": 0,
+                                "details": "There has been a connection or power failure, check status page for details.",
+                                "actions": ["Log Event"]
+                        }
+                        self.logEvent(error_log)
 
                     for tc in hardwareStatusInstance.thermocouples.recently_disconnected:
                         error_log = {
@@ -112,26 +136,27 @@ class SafetyCheck(Thread):
                         }
                         self.logEvent(error_log)
                         hardwareStatusInstance.thermocouples.recently_disconnected.remove(tc)
-                        if ProfileInstance.getInstance().activeProfile:
-                            d_out.update({"IR Lamp 1 PWM DC": 0})
-                            d_out.update({"IR Lamp 2 PWM DC": 0})
-                            d_out.update({"IR Lamp 3 PWM DC": 0})
-                            d_out.update({"IR Lamp 4 PWM DC": 0})
-                            d_out.update({"IR Lamp 5 PWM DC": 0})
-                            d_out.update({"IR Lamp 6 PWM DC": 0})
-                            d_out.update({"IR Lamp 7 PWM DC": 0})
-                            d_out.update({"IR Lamp 8 PWM DC": 0})
-                            d_out.update({"IR Lamp 9 PWM DC": 0})
-                            d_out.update({"IR Lamp 10 PWM DC": 0})
-                            d_out.update({"IR Lamp 11 PWM DC": 0})
-                            d_out.update({"IR Lamp 12 PWM DC": 0})
-                            d_out.update({"IR Lamp 13 PWM DC": 0})
-                            d_out.update({"IR Lamp 14 PWM DC": 0})
-                            d_out.update({"IR Lamp 15 PWM DC": 0})
-                            d_out.update({"IR Lamp 16 PWM DC": 0})
 
-                            HardwareStatusInstance.getInstance().TdkLambda_Cmds.append(['Shroud Duty Cycle', 0])
-                            HardwareStatusInstance.getInstance().TdkLambda_Cmds.append(['Platen Duty Cycle', 0])
+                        # if ProfileInstance.getInstance().activeProfile:
+                        #     d_out.update({"IR Lamp 1 PWM DC": 0})
+                        #     d_out.update({"IR Lamp 2 PWM DC": 0})
+                        #     d_out.update({"IR Lamp 3 PWM DC": 0})
+                        #     d_out.update({"IR Lamp 4 PWM DC": 0})
+                        #     d_out.update({"IR Lamp 5 PWM DC": 0})
+                        #     d_out.update({"IR Lamp 6 PWM DC": 0})
+                        #     d_out.update({"IR Lamp 7 PWM DC": 0})
+                        #     d_out.update({"IR Lamp 8 PWM DC": 0})
+                        #     d_out.update({"IR Lamp 9 PWM DC": 0})
+                        #     d_out.update({"IR Lamp 10 PWM DC": 0})
+                        #     d_out.update({"IR Lamp 11 PWM DC": 0})
+                        #     d_out.update({"IR Lamp 12 PWM DC": 0})
+                        #     d_out.update({"IR Lamp 13 PWM DC": 0})
+                        #     d_out.update({"IR Lamp 14 PWM DC": 0})
+                        #     d_out.update({"IR Lamp 15 PWM DC": 0})
+                        #     d_out.update({"IR Lamp 16 PWM DC": 0})
+                        # 
+                        #     HardwareStatusInstance.getInstance().TdkLambda_Cmds.append(['Shroud Duty Cycle', 0])
+                        #     HardwareStatusInstance.getInstance().TdkLambda_Cmds.append(['Platen Duty Cycle', 0])
 
                     for tc in TCs:
                         # if there are any TC's higher than max temp
@@ -150,7 +175,7 @@ class SafetyCheck(Thread):
                             self.logEvent(error)
                             tempErrorDict[error['event']] = True
 
-                            d_out = HardwareStatusInstance.getInstance().PC_104.digital_out
+                            d_out = HardwareStatusInstance.getInstance().pc_104.digital_out
                             ProfileInstance.getInstance().activeProfile = False
                             Logging.debugPrint(1, "ERROR Heat was above max operating temperature ({})".format(tc.temp))
                             vacuum = False
@@ -279,7 +304,7 @@ class SafetyCheck(Thread):
                         userName = "user"
                     if "root" in userName:
                         if vacuum and HardwareStatusInstance.getInstance().pfeiffer_gauges.get_chamber_pressure() > 1e-4:
-                            d_out = HardwareStatusInstance.getInstance().PC_104.digital_out
+                            d_out = HardwareStatusInstance.getInstance().pc_104.digital_out
                             ProfileInstance.getInstance().activeProfile = False
                             Logging.debugPrint(1, "ERROR Pressure is above 10^-4. ({})".format(
                                 HardwareStatusInstance.getInstance().pfeiffer_gauges.get_chamber_pressure()))
