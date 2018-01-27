@@ -39,7 +39,7 @@ class Shi_MCC_Status_Contract:
             self.CryoPump['Motor On'] = d['CryoPumpReadyState'][0] == '1'
             self.CryoPump['Ready'   ] = d['CryoPumpReadyState'][1] == '1'
         if 'PurgeValveState' in d:
-            self.PurgeValveState = d['PurgeValveState'] == '1'
+            self.PurgeValveState = d['PurgeValveState'] == 1
         if 'RegenError' in d:
             self.RegenError = {
                 '@': "@: No Error",
