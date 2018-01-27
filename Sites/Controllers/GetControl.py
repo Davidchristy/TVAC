@@ -67,8 +67,8 @@ def record_data():
 
 
 def run_profile():
-    HardwareStatusInstance.getInstance().tdk_lambda__cmds.append(['Shroud Duty Cycle', 0])
-    HardwareStatusInstance.getInstance().tdk_lambda__cmds.append(['Disable Shroud Output'])
+    HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Shroud Duty Cycle', 0])
+    HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Disable Shroud Output'])
     thread_instance = ThreadCollectionInstance.getInstance()
     result = thread_instance.threadCollection.run_profile()
     return result
@@ -179,9 +179,9 @@ def hard_stop():
         d_out.update({"IR Lamp 15 PWM DC": 0})
         d_out.update({"IR Lamp 16 PWM DC": 0})
 
-        HardwareStatusInstance.getInstance().TdkLambda_Cmds.append(['Disable All Output'])
-        HardwareStatusInstance.getInstance().TdkLambda_Cmds.append(['Platen Duty Cycle', 0])
-        HardwareStatusInstance.getInstance().TdkLambda_Cmds.append(['Shroud Duty Cycle', 0])
+        HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Disable All Output'])
+        HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Platen Duty Cycle', 0])
+        HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Shroud Duty Cycle', 0])
         Logging.logEvent("Event","Profile",
             {"message": "Profile Halted:",
             "ProfileInstance": ProfileInstance.getInstance()})
@@ -376,4 +376,11 @@ def get_system_power():
 
     return json.dumps(message)
 
+
+def get_interlocks():
+    message = {
+        "overheated tc": HardwareStatusInstance.getInstance().overheated_tc,
+        "overpressure check": HardwareStatusInstance.getInstance().operational_vacuum
+
+    }
 

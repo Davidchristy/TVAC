@@ -98,20 +98,22 @@ class PfeifferGaugeUpdater(Thread):
                                             {'addr': 2, 'Pressure': pressures[1]},
                                             {'addr': 3, 'Pressure': pressures[2]}])
                     # end test else
-                    Logging.logEvent("Debug", "Status Update",
-                                     {"message": "Reading and writing with PfeifferGaugeUpdater.\n"
-                                                 "Cryopump: {:f}; Chamber: {:f}; RoughPump: {:f}\n"
-                                                 "".format(self.gauges.get_cryopump_pressure(),
-                                                           self.gauges.get_chamber_pressure(),
-                                                           self.gauges.get_roughpump_pressure()),
-                                      "level": 3})
                     if time.time() > next_param_read_time:
                         if "root" in user_name:
+
                             self.gauges.update([{'addr': 1, 'error': self.Pgauge.GetError(1),
                                                  'cc on': self.Pgauge.GetCCstate(1)},
                                                 {'addr': 2, 'error': self.Pgauge.GetError(2),
                                                  'cc on': self.Pgauge.GetCCstate(2)},
                                                 {'addr': 3, 'error': self.Pgauge.GetError(3)}])
+                        Logging.logEvent("Debug", "Status Update",
+                                         {"message": "Reading and writing with PfeifferGaugeUpdater.\n"
+                                                     "Cryopump: {:f}; Chamber: {:f}; RoughPump: {:f}"
+                                                     "".format(self.gauges.get_cryopump_pressure(),
+                                                               self.gauges.get_chamber_pressure(),
+                                                               self.gauges.get_roughpump_pressure()),
+                                          "level": 3})
+
                         if ProfileInstance.getInstance().record_data:
                             self.logPressureData()
                         next_param_read_time += self.param_period

@@ -155,13 +155,13 @@ class SafetyCheck(Thread):
                         #     d_out.update({"IR Lamp 15 PWM DC": 0})
                         #     d_out.update({"IR Lamp 16 PWM DC": 0})
                         # 
-                        #     HardwareStatusInstance.getInstance().TdkLambda_Cmds.append(['Shroud Duty Cycle', 0])
-                        #     HardwareStatusInstance.getInstance().TdkLambda_Cmds.append(['Platen Duty Cycle', 0])
-
+                        #     HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Shroud Duty Cycle', 0])
+                        #     HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Platen Duty Cycle', 0])
+                    overheated_tc = False
                     for tc in TCs:
                         # if there are any TC's higher than max temp
                         if tc.temp > MAX_OPERATING_TEMP:
-                            # print("{}-> {}".format(tc.Thermocouple, tc.temp))
+                            overheated_tc = True
                             errorDetail = "TC # {} is above MAX_OPERATING_TEMP ({}). Currently {}c".format(
                                 tc.Thermocouple, MAX_OPERATING_TEMP, tc.temp)
                             error = {
@@ -196,8 +196,8 @@ class SafetyCheck(Thread):
                             d_out.update({"IR Lamp 15 PWM DC": 0})
                             d_out.update({"IR Lamp 16 PWM DC": 0})
 
-                            HardwareStatusInstance.getInstance().TdkLambda_Cmds.append(['Shroud Duty Cycle', 0])
-                            HardwareStatusInstance.getInstance().TdkLambda_Cmds.append(['Platen Duty Cycle', 0])
+                            HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Shroud Duty Cycle', 0])
+                            HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Platen Duty Cycle', 0])
 
                             release_hold_thread()
                         # end of max operational test
@@ -271,9 +271,10 @@ class SafetyCheck(Thread):
                                 }
                                 self.logEvent(error)
                                 tempErrorDict[error['event']] = True
-                    # end of min touch test
-                    # if of outside thermaltest
+                            # end of min touch test
+                        # if of outside thermaltest
                     # End of TC for loop
+                    HardwareStatusInstance.getInstance().overheated_tc = overheated_tc
 
                     for errorType in self.errorDict:
                         # for every type of error
@@ -327,8 +328,8 @@ class SafetyCheck(Thread):
                             d_out.update({"IR Lamp 15 PWM DC": 0})
                             d_out.update({"IR Lamp 16 PWM DC": 0})
 
-                            HardwareStatusInstance.getInstance().TdkLambda_Cmds.append(['Shroud Duty Cycle', 0])
-                            HardwareStatusInstance.getInstance().TdkLambda_Cmds.append(['Platen Duty Cycle', 0])
+                            HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Shroud Duty Cycle', 0])
+                            HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Platen Duty Cycle', 0])
 
                             release_hold_thread()
 
