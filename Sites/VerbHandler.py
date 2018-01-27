@@ -57,7 +57,7 @@ class VerbHandler(http.server.BaseHTTPRequestHandler):
                 '/StoprecordData': GetControl.stop_recording_data,
                 '/recordData': GetControl.record_data,
                 '/chamberDoorStatus':GetControl.chamber_door_status,
-                "/getSystemPower":GetControl.get_system_power,
+                "/getInterlockStatus":GetControl.get_interlock_status,
                 }[path]()
 
             Logging.logEvent("Debug","Status Update",

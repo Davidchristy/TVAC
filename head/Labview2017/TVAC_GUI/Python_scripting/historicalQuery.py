@@ -288,15 +288,17 @@ def main(args):
 		ax1.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d %H:%M:%S'))
 
 	if expectedSelection == '1':
-		for zone in range(0,9):
-			zoneStr="zone"+str(zone+1)
-			if len(eXaxis[zoneStr]) != 0:
-				ax1.plot_date(eXaxis[zoneStr],eYaxis[zoneStr], '-',label=("Zone "+str(zone+1)))
+		try:
+			for zone in range(0,9):
+				zoneStr="zone"+str(zone+1)
+				if len(eXaxis[zoneStr]) != 0:
+					ax1.plot_date(eXaxis[zoneStr],eYaxis[zoneStr], '-',label=("Zone "+str(zone+1)))
 
-		ax1.legend(bbox_to_anchor=(0., 1.075, 1., .102), loc=3,			
-	   ncol=5, mode="expand", borderaxespad=0.2)
-			#except:
-				#print("No Expected Temp Data")
+			ax1.legend(bbox_to_anchor=(0., 1.075, 1., .102), loc=3,			
+		   ncol=5, mode="expand", borderaxespad=0.2)
+
+		except:
+			print("No Expected Temp Data")
 
 	#print(min(pTime),max(pTime))
 
