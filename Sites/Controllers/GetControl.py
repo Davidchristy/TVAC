@@ -377,9 +377,12 @@ def get_system_power():
     return json.dumps(message)
 
 def get_interlock_status():
-       
+
     message = {
-        "door_interlock": HardwareStatusInstance.getInstance().pc_104.digital_in.chamber_closed,
+        "door_interlock":  HardwareStatusInstance.getInstance().pc_104.digital_in.chamber_closed ,
+        "overTemp" : True,
+        "overPressure": True,
+        "gateValve": True,
         "thermocouple": HardwareStatusInstance.getInstance().thermocouple_power,
         "pfeiffer_gauge": HardwareStatusInstance.getInstance().pfeiffer_gauge_power,
         "ln2_interlock": False,
