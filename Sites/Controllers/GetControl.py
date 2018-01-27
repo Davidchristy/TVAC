@@ -365,15 +365,15 @@ def chamber_door_status():
         return "{'error':'{}'}".format(e)
 
 def get_system_power():
-    message = []
-    message.append('{')
-    message.append('"pfeiffer_gauge":"{}"'.format(HardwareStatusInstance.getInstance().pfeiffer_gauge_power))
-    message.append('"shi_compressor":"{}"'.format(HardwareStatusInstance.getInstance().shi_compressor_power))
-    message.append('"shi_mcc":"{}"'.format(HardwareStatusInstance.getInstance().shi_mcc_power))
-    message.append('"tdk_lambda":"{}"'.format(HardwareStatusInstance.getInstance().tdk_lambda_power))
-    message.append('"thermocouple":"{}"'.format(HardwareStatusInstance.getInstance().thermocouple_power))
-    message.append('"pc_104":"{}"'.format(HardwareStatusInstance.getInstance().pc_104_power))
-    message.append('}')
-    return ''.join(message)
+    message = {
+        "pfeiffer_gauge": HardwareStatusInstance.getInstance().pfeiffer_gauge_power,
+        "shi_compressor": HardwareStatusInstance.getInstance().shi_compressor_power,
+        "shi_mcc": HardwareStatusInstance.getInstance().shi_mcc_power,
+        "tdk_lambda": HardwareStatusInstance.getInstance().tdk_lambda_power,
+        "thermocouple": HardwareStatusInstance.getInstance().thermocouple_power,
+        "pc_104": HardwareStatusInstance.getInstance().pc_104_power,
+        }
+
+    return json.dumps(message)
 
 

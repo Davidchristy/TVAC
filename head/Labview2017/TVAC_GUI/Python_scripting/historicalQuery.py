@@ -143,7 +143,7 @@ def getExpectedTempFromDB(startingPoint,endingPoint):
 	return "Expected Temp since {}".format(startingPoint), results, data_csv
 
 def utc_to_local(utc_dt):
-    return utc_dt.replace(tzinfo=timezone.utc).astimezone(tz=None)
+	return utc_dt.replace(tzinfo=timezone.utc).astimezone(tz=None)
 
 
 def main(args):
@@ -259,7 +259,6 @@ def main(args):
 	xg2=[]	
 	guage3=[]
 	xg3=[]
-
 	for time_value in range(0,len(pTime)):
 		#print(pTime[time_value])
 		if pGuage[time_value] == 1:
@@ -278,14 +277,16 @@ def main(args):
 	for tc in tc_data:
 		try:
 			ax1.plot_date(time_values,tc_data[tc], '-',label=str(tc))
-			ax1.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d %H:%M:%S'))
 			plt.gcf().autofmt_xdate()
 			length=len(tc_data[tc])
 			ax1.legend(bbox_to_anchor=(0., 1.075, 1., .102), loc=3,
-           ncol=5, mode="expand", borderaxespad=0.2)
+		   ncol=5, mode="expand", borderaxespad=0.2)
 		except:
 			print("No TC Data")
 		#print(tc)
+	if len(tc_data) != 0:
+		ax1.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d %H:%M:%S'))
+
 	if expectedSelection == '1':
 		for zone in range(0,9):
 			zoneStr="zone"+str(zone+1)
@@ -293,7 +294,7 @@ def main(args):
 				ax1.plot_date(eXaxis[zoneStr],eYaxis[zoneStr], '-',label=("Zone "+str(zone+1)))
 
 		ax1.legend(bbox_to_anchor=(0., 1.075, 1., .102), loc=3,			
-       ncol=5, mode="expand", borderaxespad=0.2)
+	   ncol=5, mode="expand", borderaxespad=0.2)
 			#except:
 				#print("No Expected Temp Data")
 
@@ -304,7 +305,8 @@ def main(args):
 	ax2.plot(xg3,guage3,'-', label=str("Roughing"))
 
 	# Use a DateFormatter to set the data to the correct format.
-	ax2.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d %H:%M:%S'))
+	if len(guage1) != 0:
+		ax2.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d %H:%M:%S'))
 
 	# Sets the tick labels diagonal so they fit easier.
 	plt.gcf().autofmt_xdate()
@@ -316,7 +318,6 @@ def main(args):
 		ax2.set_yscale('linear')
 	#ax2.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d %H:%M:%S'))
 	#plt.gcf().autofmt_xdate()
-
 
 	ax2.legend()
 	#ax1.legend(bbox_to_anchor=(-.01, 0, 1, 1), bbox_transform=plt.gcf().transFigure)
@@ -330,6 +331,7 @@ def main(args):
 	ax2.set_title(pressureID)
 
 	#plt.savefig('graph1.png')
+	
 	plt.show()
 		
 
