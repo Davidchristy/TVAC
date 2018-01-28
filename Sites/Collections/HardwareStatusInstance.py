@@ -33,7 +33,7 @@ class HardwareStatusInstance:
             self.shi_mcc_cmds = []  # ['cmd', arg, arg,... arg]
             self.shi_compressor_cmds = []  # 'cmd'
             self.tdk_lambda_ps = TdkLambdaCollection()
-            self.tdk_lambda__cmds = []  # ['cmd', arg, arg,... arg]
+            self.tdk_lambda_cmds = []  # ['cmd', arg, arg,... arg]
             self.pc_104 = PC_104_Instance.getInstance()
 
             # System Wide Stats
@@ -54,6 +54,9 @@ class HardwareStatusInstance:
             self.tdk_lambda_power = True
             self.thermocouple_power = True
             self.pc_104_power = True
+
+            self.overheated_tc = False
+
 
 
 

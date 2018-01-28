@@ -325,7 +325,7 @@ class ZoneControlStub:
                 pass
         else:
             # for zone 9, the platen
-            HardwareStatusInstance.getInstance().TdkLambda_Cmds.append(['Platen Duty Cycle', self.duty_cycle])
+            HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Platen Duty Cycle', self.duty_cycle])
 
         Logging.debugPrint(2, "{}: avg ({})\goal({}) -- {}".format(self.name,
                                                                    self.zone_profile.getTemp(self.zone_profile.average),
@@ -469,7 +469,7 @@ class DutyCycleControlStub(Thread):
                          {'time': datetime.time(),
                           "message": ProfileInstance.getInstance().zoneProfiles.profileName,
                           "ProfileInstance": ProfileInstance.getInstance()})
-        HardwareStatusInstance.getInstance().tdk_lambda__cmds.append(['Disable Platen Output', ''])
+        HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Disable Platen Output', ''])
         update_db_with_end_time()
         self.running = False
         tc_list = HardwareStatusInstance.getInstance().thermocouples.tcList
@@ -498,7 +498,7 @@ class DutyCycleControlStub(Thread):
                          {"message": "DCCS: Setting up Platen",
                           "level": 2})
 
-        HardwareStatusInstance.getInstance().tdk_lambda__cmds.append(['Setup Platen', ''])
+        HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Setup Platen', ''])
 
         # Generate zone values
         for zone in self.zones:
@@ -525,7 +525,7 @@ class DutyCycleControlStub(Thread):
                     self.d_out.update({zone.lamps[1] + " PWM DC": 0})
                     self.d_out.update({zone.lamps[0] + " PWM DC": 0})
                 else:
-                    HardwareStatusInstance.getInstance().tdk_lambda__cmds.append(['Platen Duty Cycle', 0])
+                    HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Platen Duty Cycle', 0])
 
     def active_program_loop(self):
         current_set_point = 1

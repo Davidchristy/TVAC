@@ -107,8 +107,8 @@ class TdkLambdaUpdater(Thread):
                             ps.update(self.pwr_supply.get_out())
                             ps.update(self.pwr_supply.get_mode())
                         self.hw.tdk_lambda_ps.update(update_power_supplies)
-                        while len(self.hw.TdkLambda_Cmds):
-                            self.Process_Commands(self.hw.TdkLambda_Cmds.pop(0))
+                        while len(self.hw.tdk_lambda_cmds):
+                            self.Process_Commands(self.hw.tdk_lambda_cmds.pop(0))
                     else:
                         Logging.logEvent("Debug", "Status Update",
                                          {"message": "Test run of TDK Lambda Power Supplies loop",
@@ -339,7 +339,7 @@ class TdkLambdaUpdater(Thread):
 
     # hw = HardwareStatusInstance.getInstance()
     # p = HardwareStatusInstance.getInstance().tdk_lambda_ps
-    # c = HardwareStatusInstance.getInstance().TdkLambda_Cmds
+    # c = HardwareStatusInstance.getInstance().tdk_lambda_cmds
 
     # time.sleep(10)
     # print(p.getJson())

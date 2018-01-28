@@ -325,6 +325,10 @@ class VacuumControlStub(Thread):
                 (not self.hw.shi_cryopump.is_regen_active()):
             if (not self.hw.pc_104.digital_in.getVal('CryoP_GV_Closed')) or \
                     self.profile.vacuumWanted:
+                if self.hw.pc_104.digital_in.getVal('RoughP_Powered'):
+                    self.hw.pc_104.digital_out.update({'RoughP Pwr Relay': False})
+                    self.hw.pc_104.digital_out.update({'RoughP PurgeGass': False})
+
                 self.hw.pc_104.digital_out.update({'CryoP GateValve': True})
                 self.state = 'Operational Vacuum: Cryo Pumping'
                 Logging.debugPrint(3, "Vacuum Ctl (@OpVac): Switching from OV to OV:CP")
@@ -344,6 +348,7 @@ class VacuumControlStub(Thread):
                 self.hw.Shi_MCC_Cmds.append(['Turn_CryoPumpOn'])
                 time.sleep(5)
                 self.hw.pc_104.digital_out.update({'RoughP Pwr Relay': False})
+                self.hw.pc_104.digital_out.update({'RoughP PurgeGass': False})
                 Logging.debugPrint(3, "Vacuum Ctl (@OpVac): Starting the Cryo Pump; Roughing Pump Off.")
             else:
                 if self.hw.pc_104.digital_in.getVal('RoughP_Powered'):

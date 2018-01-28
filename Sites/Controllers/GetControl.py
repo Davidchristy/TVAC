@@ -67,8 +67,8 @@ def record_data():
 
 
 def run_profile():
-    HardwareStatusInstance.getInstance().tdk_lambda__cmds.append(['Shroud Duty Cycle', 0])
-    HardwareStatusInstance.getInstance().tdk_lambda__cmds.append(['Disable Shroud Output'])
+    HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Shroud Duty Cycle', 0])
+    HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Disable Shroud Output'])
     thread_instance = ThreadCollectionInstance.getInstance()
     result = thread_instance.threadCollection.run_profile()
     return result
@@ -179,9 +179,9 @@ def hard_stop():
         d_out.update({"IR Lamp 15 PWM DC": 0})
         d_out.update({"IR Lamp 16 PWM DC": 0})
 
-        HardwareStatusInstance.getInstance().TdkLambda_Cmds.append(['Disable All Output'])
-        HardwareStatusInstance.getInstance().TdkLambda_Cmds.append(['Platen Duty Cycle', 0])
-        HardwareStatusInstance.getInstance().TdkLambda_Cmds.append(['Shroud Duty Cycle', 0])
+        HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Disable All Output'])
+        HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Platen Duty Cycle', 0])
+        HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Shroud Duty Cycle', 0])
         Logging.logEvent("Event","Profile",
             {"message": "Profile Halted:",
             "ProfileInstance": ProfileInstance.getInstance()})
@@ -380,13 +380,18 @@ def get_interlock_status():
 
     message = {
         "door_interlock":  HardwareStatusInstance.getInstance().pc_104.digital_in.chamber_closed ,
-        "overTemp" : True,
-        "overPressure": True,
-        "gateValve": True,
+        "overTemp" : HardwareStatusInstance.getInstance().overheated_tc,
+        "overPressure": not HardwareStatusInstance.getInstance().operational_vacuum,
+        "roughing_pump_valve_open": HardwareStatusInstance.getInstance().pc_104.digital_in.getVal('RoughP_GV_Open'),
+        "roughing_pump_valve_closed": HardwareStatusInstance.getInstance().pc_104.digital_in.getVal('RoughP_GV_Closed'),
         "thermocouple": HardwareStatusInstance.getInstance().thermocouple_power,
         "pfeiffer_gauge": HardwareStatusInstance.getInstance().pfeiffer_gauge_power,
-        "ln2_interlock": False,
-        "cryopump_valve": False,
+        "ln2_shroud_open": HardwareStatusInstance.getInstance().pc_104.digital_in.getVal('LN2_S_Sol_Open'),
+        "ln2_shroud_closed": HardwareStatusInstance.getInstance().pc_104.digital_in.getVal('LN2_S_Sol_Closed'),
+        "ln2_platen_open": HardwareStatusInstance.getInstance().pc_104.digital_in.getVal('LN2_P_Sol_Open'),
+        "ln2_platen_closed": HardwareStatusInstance.getInstance().pc_104.digital_in.getVal('LN2_P_Sol_Closed'),
+        "cryopump_valve_open": HardwareStatusInstance.getInstance().pc_104.digital_in.getVal('CryoP_GV_Open'),
+        "cryopump_valve_closed": HardwareStatusInstance.getInstance().pc_104.digital_in.getVal('CryoP_GV_Closed'),
         "tdk_lambda": HardwareStatusInstance.getInstance().tdk_lambda_power,
         "pc_104": HardwareStatusInstance.getInstance().pc_104_power,        
         "shi_compressor": HardwareStatusInstance.getInstance().shi_compressor_power,
@@ -394,5 +399,4 @@ def get_interlock_status():
     }    
 
     return json.dumps(message)
-
 

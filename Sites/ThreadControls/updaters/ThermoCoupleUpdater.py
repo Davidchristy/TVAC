@@ -69,7 +69,10 @@ class ThermoCoupleUpdater(Thread):
                         f_tcs = open("../virtualized/hw-files/thermocouples.txt", "r")
                         tcs = []
                         for line in f_tcs:
-                            tcs.append(float(line.strip()))
+                            try:
+                                tcs.append(float(line.strip()))
+                            except ValueError as e:
+                                pass
                         f_tcs.close()
 
                         tc_values = {

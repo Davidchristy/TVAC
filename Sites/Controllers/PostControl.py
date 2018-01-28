@@ -49,7 +49,7 @@ def send_hw_cmd(data):
     elif data[0] == "Shi_Compressor_Cmds":  # 'cmd'
         hw.Shi_Compressor_Cmds.append(data[1])
     elif data[0] == "TdkLambda_Cmds":  # ['cmd', arg, arg,... arg]
-        hw.TdkLambda_Cmds.append(data[1:])
+        hw.tdk_lambda_cmds.append(data[1:])
     else:
         return '{"result":"Unknown Hardware Target."}'
     return '{"result":"success"}'
@@ -75,15 +75,15 @@ def heat_up_shroud(data):
     if not ProfileInstance.getInstance().activeProfile:
         if duty_cycle == 0:
             if tdk_lambda.get_shroud_left().output_enable or tdk_lambda.get_shroud_right().output_enable:
-                HardwareStatusInstance.getInstance().TdkLambda_Cmds.append(['Disable Shroud Output'])
+                HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Disable Shroud Output'])
                 return "{'result':'Disabled Shroud'}"
             else:
                 return "{'result':'Shroud Off'}"
         else:
             if not (tdk_lambda.get_shroud_left().output_enable and tdk_lambda.get_shroud_right().output_enable):
-                HardwareStatusInstance.getInstance().TdkLambda_Cmds.append(['Setup Shroud'])
+                HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Setup Shroud'])
                 print("Turning on Shroud")
-            HardwareStatusInstance.getInstance().TdkLambda_Cmds.append(['Shroud Duty Cycle', duty_cycle])
+            HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Shroud Duty Cycle', duty_cycle])
             return "{'result':'Shroud duty cycle set'}"
     else:
         return "{'result':'Not used in Profile'}"
@@ -95,14 +95,14 @@ def heat_up_platen(data):
     if not ProfileInstance.getInstance().activeProfile:
         if duty_cycle == 0:
             if tdk_lambda.get_platen_left().output_enable or tdk_lambda.get_platen_right().output_enable:
-                HardwareStatusInstance.getInstance().TdkLambda_Cmds.append(['Disable Platen Output'])
+                HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Disable Platen Output'])
                 return "{'result':'Disabled Platen'}"
             else:
                 return "{'result':'Platen Off'}"
         else:
             if not (tdk_lambda.get_platen_left().output_enable and tdk_lambda.get_platen_right().output_enable):
-                HardwareStatusInstance.getInstance().TdkLambda_Cmds.append(['Setup Platen'])
-            HardwareStatusInstance.getInstance().TdkLambda_Cmds.append(['Platen Duty Cycle', duty_cycle])
+                HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Setup Platen'])
+            HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Platen Duty Cycle', duty_cycle])
             return "{'result':'Platen duty cycle set'}"
     else:
         return "{'result':'Not used in Profile'}"
