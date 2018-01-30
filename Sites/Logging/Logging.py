@@ -39,15 +39,15 @@ class Logging(object):
             # 	if Logging.debug:
             # 		raise e
 
-            # coloums = "( event_type, details )"
-            # values = "( \"{}\",\"{}\" )".format(category,logType)
-            # sql = "INSERT INTO tvac.Event {} VALUES {};".format(coloums, values)
-            # try:
-            # 	mysql = MySQlConnect()
-            # 	mysql.cur.execute(sql)
-            # 	mysql.conn.commit()
-            # except Exception as e:
-            # 	Logging.debugPrint(1, "Error: {}".format(e))
+            coloums = "( event_type, details )"
+            values = "( \"{}\",\"{}\" )".format(category,logType)
+            sql = "INSERT INTO tvac.Event {} VALUES {};".format(coloums, values)
+            try:
+            	mysql = MySQlConnect()
+            	mysql.cur.execute(sql)
+            	mysql.conn.commit()
+            except Exception as e:
+            	Logging.debugPrint(1, "Error: {}".format(e))
         elif category is "Debug":
             if "Status Update" in logType:
                 Logging.debugPrint(data["level"],data['message'])

@@ -45,9 +45,9 @@ def send_hw_cmd(data):
     hw = HardwareStatusInstance.getInstance()
     Logging.debugPrint(3,"POST: SendHwCmd '%s'" % data)
     if data[0] == "Shi_MCC_Cmds":  # ['cmd', arg, arg,... arg]
-        hw.Shi_MCC_Cmds.append(data[1:])
+        hw.shi_mcc_cmds.append(data[1:])
     elif data[0] == "Shi_Compressor_Cmds":  # 'cmd'
-        hw.Shi_Compressor_Cmds.append(data[1])
+        hw.shi_compressor_cmds.append(data[1])
     elif data[0] == "TdkLambda_Cmds":  # ['cmd', arg, arg,... arg]
         hw.tdk_lambda_cmds.append(data[1:])
     else:

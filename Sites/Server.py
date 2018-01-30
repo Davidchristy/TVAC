@@ -36,7 +36,7 @@ if __name__ == '__main__':
     profileInstance = ProfileInstance.getInstance()
     threadInstance = ThreadCollectionInstance.getInstance()
 
-    Logging.logEvent("Event","System",
+    Logging.logEvent("Event","System booted",
         {"message": "Server is fully booted",
         "ProfileInstance": profileInstance.getInstance()})
     Logging.logEvent("Debug","Status Update",

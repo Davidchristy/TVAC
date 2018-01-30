@@ -38,7 +38,7 @@ def abort_regen_cycle():
     try:
         hw = HardwareStatusInstance.getInstance()
         if hw.shi_cryopump.is_regen_active():
-            hw.Shi_MCC_Cmds.append(['Start_Regen', 0])
+            hw.shi_mcc_cmds.append(['Start_Regen', 0])
             return "{'result':'success'}"
         else:
             return "{'result':'Cryopump not generating so Can't abort regeneration cycle.'}"
@@ -50,7 +50,7 @@ def do_regen_cycle():
     try:
         hw = HardwareStatusInstance.getInstance()
         if not hw.shi_cryopump.is_regen_active():
-            hw.Shi_MCC_Cmds.append(['Start_Regen', 1])
+            hw.shi_mcc_cmds.append(['Start_Regen', 1])
             return "{'result':'success'}"
         else:
             return "{'result':'Cryopump not generating so Can't abort regeneration cycle.'}"
