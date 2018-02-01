@@ -174,7 +174,7 @@ class TsRegistersUpdater(Thread):
 
         if self.hw.vacuum_state is not None:
             if self.da_io.digital_in.getVal('Chamber_Closed'):
-                if not self.hw.operational_vum:  # Disallow heaters when not at operational vacuum.
+                if not self.hw.operational_vacuum:  # Disallow heaters when not at operational vacuum.
                     self.da_io.digital_out.update({'C1 B2': 0x00})  # IR lamp 1-8
                     self.da_io.digital_out.update({'C1 B3': 0x00})  # IR lamp 9-16
                 if chamberPressure < MinRoughingPressure:

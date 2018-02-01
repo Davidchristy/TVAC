@@ -295,7 +295,7 @@ class SafetyCheck(Thread):
                     self.errorDict = tempErrorDict
 
                     # Logging if you've entered operational vacuum, and then left it
-                    # TODO: operational_vum can't be updated if there isn't an active profile...this needs to change
+                    # TODO: operational_vacuum can't be updated if there isn't an active profile...this needs to change
                     if HardwareStatusInstance.getInstance().operational_vacuum:
                         vacuum = True
 
