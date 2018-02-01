@@ -83,7 +83,6 @@ def send_receive(address, parm=349, data_str=None):
     a.settimeout(5)
     for tries in range(3):
         ip = '192.168.99.124'
-        # Changed to localhost for testing
 
         if data_str is None:
             tmp = gen_cmd_read(address, parm).encode()
