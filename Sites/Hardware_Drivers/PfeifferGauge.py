@@ -84,7 +84,7 @@ def send_receive(address, parm=349, data_str=None):
     for tries in range(3):
         ip = '192.168.99.124'
         # Changed to localhost for testing
-        ip = 'localhost'
+
         if data_str is None:
             tmp = gen_cmd_read(address, parm).encode()
             # print("messing sending: {}".format(tmp))
