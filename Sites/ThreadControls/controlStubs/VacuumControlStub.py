@@ -135,9 +135,9 @@ class VacuumControlStub(Thread):
                     self.hw.vacuum_state = self.state
 
                     if "Operational Vacuum" in self.state:
-                        self.hw.OperationalVacuum = True
+                        self.hw.operation_vacuum = True
                     else:
-                        self.hw.OperationalVacuum = False
+                        self.hw.operation_vacuum = False
 
                     Logging.logEvent("Debug", "Status Update",
                                      {"message": "VCS: Current chamber state: {}".format(self.state),
