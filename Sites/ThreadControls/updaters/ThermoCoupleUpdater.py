@@ -149,14 +149,16 @@ class ThermoCoupleUpdater(Thread):
                          {"message": "Starting ThermoCoupleUpdater",
                           "level": 2})
         ip_addr_34980a = '192.168.99.3'
-        channel__list = "(@1001:1020,2036:2040,3001:3040)"
+        # channel__list = "(@1001:1020,2036:2040,3001:3040)"
+        channel_list = "(@1001:1040,2001:2040,3001:3040)"
+
         hw_status = self.hardwareStatusInstance.getInstance()
         if os.name == "posix":
             user_name = os.environ['LOGNAME']
         else:
             user_name = "User"
         if "root" in user_name:
-            tharsis = Keysight_34980A_TCs(ip_addr_34980a, ChannelList=channel__list)
+            tharsis = Keysight_34980A_TCs(ip_addr_34980a, ChannelList=channel_list)
             tharsis.init_sys()
         else:
             tharsis = None

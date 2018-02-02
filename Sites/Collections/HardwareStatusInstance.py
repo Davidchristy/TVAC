@@ -57,7 +57,4 @@ class HardwareStatusInstance:
 
             self.overheated_tc = False
 
-
-
-
             HardwareStatusInstance.__instance = self

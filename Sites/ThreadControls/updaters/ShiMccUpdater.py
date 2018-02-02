@@ -92,11 +92,11 @@ class ShiMccUpdater(Thread):
                                              {"message": "Shi MCC Error Response: %s" % val['Response'],
                                               "level": 4})
                         else:
-                            self.hw.ShiCryopump.update({'MCC Status': val['Response']})
+                            self.hw.shi_cryopump.update({'MCC Status': val['Response']})
                         Logging.logEvent("Debug", "Status Update",
                                          {"message": "Cryopump Stage 1: {:.1f}K; Stage 2: {:.1f}K"
-                                                     "".format(self.hw.ShiCryopump.get_mcc_status('Stage 1 Temp'),
-                                                               self.hw.ShiCryopump.get_mcc_status('Stage 2 Temp')),
+                                                     "".format(self.hw.shi_cryopump.get_mcc_status('Stage 1 Temp'),
+                                                               self.hw.shi_cryopump.get_mcc_status('Stage 2 Temp')),
                                           "level": 4})
                         if time.time() > next_param_read_time:
                             val = self.mcc.get_ParamValues()
@@ -105,11 +105,11 @@ class ShiMccUpdater(Thread):
                                                  {"message": "Shi MCC Error Response: %s" % val['Response'],
                                                   "level": 4})
                             else:
-                                self.hw.ShiCryopump.update({'MCC Params': val['Response']})
+                                self.hw.shi_cryopump.update({'MCC Params': val['Response']})
                             next_param_read_time = time.time() + self.param_period
 
-                        while len(self.hw.Shi_MCC_Cmds):
-                            cmd = self.hw.Shi_MCC_Cmds.pop()
+                        while len(self.hw.shi_mcc_cmds):
+                            cmd = self.hw.shi_mcc_cmds.pop()
                             if 'FirstStageTempCTL' == cmd[0]:  # 2.9 • First Stage Temperature Control pg:10
                                 self.run_set_cmd(self.mcc.Set_FirstStageTempCTL, cmd)
                                 self.run_get_cmd(self.mcc.Get_FirstStageTempCTL,
@@ -144,7 +144,7 @@ class ShiMccUpdater(Thread):
                                          {"message": 'Shi MCC GetRegenParam_%s" Error Response: %s' % (cmd[1], val),
                                           "level": 4})
                                 else:
-                                    self.hw.ShiCryopump.update({'MCC Params': {"Regen Param_%s" % cmd[1]: val['Data']}})
+                                    self.hw.shi_cryopump.update({'MCC Params': {"Regen Param_%s" % cmd[1]: val['Data']}})
                             elif 'RegenStartDelay' == cmd[0]:  # 2.21 • Regeneration Start Delay pg.18
                                 self.run_set_cmd(self.mcc.Set_RegenStartDelay, cmd)
                                 self.run_get_cmd(self.mcc.Get_RegenStartDelay, "Regen Start Delay")
@@ -229,9 +229,9 @@ class ShiMccUpdater(Thread):
                               "level": 3})
         else:
             if 'Data' in val:
-                self.hw.ShiCryopump.update({'MCC Params': {key: val['Data']}})
+                self.hw.shi_cryopump.update({'MCC Params': {key: val['Data']}})
             else:
-                self.hw.ShiCryopump.update({'MCC Params': {key: val['Response']}})
+                self.hw.shi_cryopump.update({'MCC Params': {key: val['Response']}})
 
 
 if __name__ == '__main__':
@@ -253,5 +253,5 @@ if __name__ == '__main__':
 
     while True:
         time.sleep(5)
-        print(hw_status.ShiCryopump.getJson())
+        print(hw_status.shi_cryopump.getJson())
 

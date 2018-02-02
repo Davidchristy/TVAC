@@ -74,10 +74,10 @@ class ShiCompressorUpdater(Thread):
                         if time.time() > next_op_hours_read_time:
                             val.update(self.compressor.get_id())
                             next_op_hours_read_time += self.op_hours_read_period
-                        self.hw.ShiCryopump.update({'Compressor': val})
+                        self.hw.shi_cryopump.update({'Compressor': val})
 
-                        while len(self.hw.Shi_Compressor_Cmds):
-                            cmd = self.hw.Shi_Compressor_Cmds.pop()
+                        while len(self.hw.shi_compressor_cmds):
+                            cmd = self.hw.shi_compressor_cmds.pop()
                             if 'on' == cmd:
                                 self.compressor.set_compressor_on()
                             elif 'off' == cmd:
@@ -150,5 +150,5 @@ if __name__ == '__main__':
 
     while True:
         time.sleep(5)
-        print(hw_status.ShiCryopump.getJson())
+        print(hw_status.shi_cryopump.getJson())
 

@@ -78,7 +78,7 @@ class TdkLambdaUpdater(Thread):
                     for ps in update_power_supplies:
                         self.pwr_supply.set_addr(ps['addr'])
                         ps.update(self.pwr_supply.get_out())
-                        if not self.hw.OperationalVacuum:
+                        if not self.hw.operational_vacuum:
                             self.pwr_supply.set_out_off()
                         ps.update(self.pwr_supply.get_idn())
                         ps.update(self.pwr_supply.get_rev())
@@ -186,7 +186,7 @@ class TdkLambdaUpdater(Thread):
                 self.run_set_cmd(self.hw.tdk_lambda_ps.get_shroud_right_addr(),
                                  self.pwr_supply.set_pc, cmd[1])
         elif 'Enable All Output' == cmd[0]:  # Duty cycle is a value from 0-1
-            if self.hw.OperationalVacuum:
+            if self.hw.operational_vacuum:
                 self.run_set_cmd(self.hw.tdk_lambda_ps.get_platen_left_addr(),
                                  self.pwr_supply.set_out, True)
                 self.run_set_cmd(self.hw.tdk_lambda_ps.get_platen_right_addr(),
@@ -201,7 +201,7 @@ class TdkLambdaUpdater(Thread):
                                      "message": 'TDK Lambda Powers Supply Cant be turned on when not in Operational vacuum',
                                      "level": 3})
         elif 'Enable Platen Output' == cmd[0]:  # Duty cycle is a value from 0-1
-            if self.hw.OperationalVacuum:
+            if self.hw.operational_vacuum:
                 self.run_set_cmd(self.hw.tdk_lambda_ps.get_platen_left_addr(),
                                  self.pwr_supply.set_out, True)
                 self.run_set_cmd(self.hw.tdk_lambda_ps.get_platen_right_addr(),
@@ -212,7 +212,7 @@ class TdkLambdaUpdater(Thread):
                                      "message": 'TDK Lambda Powers Supply Cant be turned on when not in Operational vacuum',
                                      "level": 3})
         elif 'Enable Shroud Output' == cmd[0]:  # Duty cycle is a value from 0-1
-            if self.hw.OperationalVacuum:
+            if self.hw.operational_vacuum:
                 self.run_set_cmd(self.hw.tdk_lambda_ps.get_shroud_left_addr(),
                                  self.pwr_supply.set_out, True)
                 self.run_set_cmd(self.hw.tdk_lambda_ps.get_shroud_right_addr(),
@@ -227,7 +227,7 @@ class TdkLambdaUpdater(Thread):
              {
              "message": 'Setting up Platen Heaters',
              "level": 2})
-            if self.hw.OperationalVacuum:
+            if self.hw.operational_vacuum:
                 for addr in [self.hw.tdk_lambda_ps.get_platen_left_addr(),
                              self.hw.tdk_lambda_ps.get_platen_right_addr()]:
                     self.pwr_supply.set_addr(addr)
@@ -244,7 +244,7 @@ class TdkLambdaUpdater(Thread):
                              {
                                  "message": 'Setting up Shroud Heaters',
                                  "level": 2})
-            if self.hw.OperationalVacuum:
+            if self.hw.operational_vacuum:
                 for addr in [self.hw.tdk_lambda_ps.get_shroud_left_addr(),
                              self.hw.tdk_lambda_ps.get_shroud_right_addr()]:
                     self.pwr_supply.set_addr(addr)
@@ -276,7 +276,7 @@ class TdkLambdaUpdater(Thread):
             self.run_set_cmd(self.hw.tdk_lambda_ps.get_shroud_right_addr(),
                              self.pwr_supply.set_out, False)
         elif 'Platen Duty Cycle' == cmd[0]:  # Duty cycle is a value from 0-1
-            if self.hw.OperationalVacuum:
+            if self.hw.operational_vacuum:
                 if cmd[1] > 1:
                     dutycycle = 1.0
                 elif cmd[1] < 0:
@@ -296,7 +296,7 @@ class TdkLambdaUpdater(Thread):
                                      "message": 'TDK Lambda Powers Supply Cant be turned on when not in Operational vacuum',
                                      "level": 3})
         elif 'Shroud Duty Cycle' == cmd[0]:  # Duty cycle is a value from 0-1
-            if self.hw.OperationalVacuum:
+            if self.hw.operational_vacuum:
                 if cmd[1] > 1:
                     dutycycle = 1.0
                 elif cmd[1] < 0:
@@ -344,7 +344,7 @@ class TdkLambdaUpdater(Thread):
     # time.sleep(10)
     # print(p.getJson())
 
-    # hw.OperationalVacuum = True
+    # hw.operational_vacuum = True
     # time.sleep(5)
     # print(p.getJson())
     # c.append(['Setup Platen', ''])
