@@ -398,21 +398,5 @@ def get_interlock_status():
         "shi_mcc": HardwareStatusInstance.getInstance().shi_mcc_power,
     }
 
-    # here temporarly to fix labview
-    message = {
-        "door_interlock": HardwareStatusInstance.getInstance().pc_104.digital_in.chamber_closed,
-        "overTemp": True,
-        "overPressure": True,
-        "gateValve": True,
-        "thermocouple": HardwareStatusInstance.getInstance().thermocouple_power,
-        "pfeiffer_gauge": HardwareStatusInstance.getInstance().pfeiffer_gauge_power,
-        "ln2_interlock": False,
-        "cryopump_valve": False,
-        "tdk_lambda": HardwareStatusInstance.getInstance().tdk_lambda_power,
-        "pc_104": HardwareStatusInstance.getInstance().pc_104_power,
-        "shi_compressor": HardwareStatusInstance.getInstance().shi_compressor_power,
-        "shi_mcc": HardwareStatusInstance.getInstance().shi_mcc_power,
-    }
-
     return json.dumps(message)
 
