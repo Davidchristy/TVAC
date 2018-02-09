@@ -2,6 +2,7 @@ import http.server
 import json
 import sys
 import os
+import socket
 
 from Controllers import PostControl
 from Controllers import GetControl
@@ -70,6 +71,8 @@ class VerbHandler(http.server.BaseHTTPRequestHandler):
             # Out the results back to the server
             self.setHeader()
             self.wfile.write(str(result).encode())
+        except socket.error:
+            pass
         except Exception as e:
             # print("There has been an error").
             # FileCreation.pushFile("Error","Get",'{"errorMessage":"%s"}\n'%(e))
@@ -138,6 +141,8 @@ class VerbHandler(http.server.BaseHTTPRequestHandler):
 
             self.setHeader()
             self.wfile.write(str(result).encode())
+        except socket.error:
+            pass
         except Exception as e:
 
             exc_type, exc_obj, exc_tb = sys.exc_info()
@@ -168,7 +173,3 @@ class VerbHandler(http.server.BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-type", "application/json".encode())
         self.end_headers()
-
-    # def displayZones(self):
-    #     profileInstance = ProfileInstance.getInstance()
-    #     self.wfile.write(profileInstance.zoneProfiles.getJson().encode())
