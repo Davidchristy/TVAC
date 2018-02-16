@@ -11,7 +11,7 @@ class ShiCompressor:
     def __init__(self):
         self.crc = CRC16(modbus_flag=True).calculate
         self.port = None
-        self.port_listener = TTY_Reader(None)
+        self.port_listener = TTY_Reader(None, name="ShiCompressorReader")
         self.port_listener.daemon = True
 
     def open_port(self):
@@ -37,7 +37,7 @@ class ShiCompressor:
             # print("C:--" + msg1.replace('\r', r'\r') + "---")  # TODO: Remove print and msg1
             self.port.write(msg1.encode()) 
             # TODO: Change to error event print("C:--" + self.GenCmd(Command).replace('\r', r'\r') + "---")
-            resp = self.port_listener.read_line(6.0)
+            resp = self.port_listener.read_line(2.0)
             # print("R:--" + resp.replace('\r', r'\r') + "---")
             resp = resp.strip()
             if self.ResponceGood(resp, command):
@@ -134,6 +134,3 @@ class ShiCompressor:
         resp = self.send_cmd('RS1')
         return resp
 
-
-if __name__ == '__main__':
-    pass

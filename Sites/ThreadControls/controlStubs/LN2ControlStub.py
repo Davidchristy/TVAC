@@ -27,7 +27,9 @@ class LN2ControlStub(Thread):
             self.ThreadCollection = ThreadCollection
             self.hardwareStatus = HardwareStatusInstance
             self.SLEEP_TIME = 5  # will be 30 seconds
-            super(LN2ControlStub, self).__init__()
+            super(LN2ControlStub, self).__init__(name="LN2ControlStub")
+
+            self.time_since_last_sleep = time.time()
 
     def run(self):
         if os.name == "posix":
@@ -71,7 +73,7 @@ class LN2ControlStub(Thread):
                             # If a zone doesn't have a dutyCycle, they aren't running, so we can safely ignore them
                             if not zone.duty_cycle:
                                 continue
-                            print("current zone_str: {}".format(zoneStr))
+                            #print("current zone_str: {}".format(zoneStr))
                             if zoneStr != "zone9":
                                 dutycyclelist.append(zone.duty_cycle)
                             else:
@@ -115,7 +117,10 @@ class LN2ControlStub(Thread):
                                 # What's the difference between this and...
                                 d_out.update({'LN2-P Sol': False, })
                                 a_out.update({'LN2 Platen': 0})
+                        # print("Thread: {} \tcurrent loop time: {}".format(self.name,
+                        #                                                   time.time() - self.time_since_last_sleep))
                         time.sleep(self.SLEEP_TIME)
+                        # self.time_since_last_sleep = time.time()
                     # end of Inner While True
                 except Exception as e:
                     Logging.debugPrint(1, "Error in run, LN2 Control Stub: {}".format(str(e)))

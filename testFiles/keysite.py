@@ -165,9 +165,10 @@ print('Got connection from', addr)
 c.send(prompt.encode())
 while True:
     data = recvall(c).decode()
-    print("Data received:{}".format(data))
-    if "READ?" in data:
-        send_temps(data)
+    # print("Data received:{}".format(data))
+    c.send("WOW".encode())
+    # if "READ?" in data:
+    #     send_temps(data)
 
     time.sleep(1)
 

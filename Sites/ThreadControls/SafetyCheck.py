@@ -1,13 +1,14 @@
 from threading import Thread
+import threading
 import time
 from datetime import datetime
 import os
+import subprocess
 
 from Collections.HardwareStatusInstance import HardwareStatusInstance
 from Collections.ProfileInstance import ProfileInstance
 from Logging.MySql import MySQlConnect
 from Logging.Logging import Logging
-
 
 def release_hold_thread():
     ProfileInstance.getInstance().inHold = False
@@ -63,10 +64,11 @@ class SafetyCheck(Thread):
 
             self.MAX_UUT_TEMP = {}
             self.MIN_UUT_TEMP = {}
+            self.SLEEP_TIME = 1  # in seconds
 
             SafetyCheck.__instance = self
             self.parent = parent
-            super(SafetyCheck, self).__init__()
+            super(SafetyCheck, self).__init__(name="SafetyChecker")
 
     def run(self):
         # This should always stay on
@@ -86,8 +88,6 @@ class SafetyCheck(Thread):
                 self.MAX_UUT_TEMP = {}
                 self.MIN_UUT_TEMP = {}
 
-                SLEEP_TIME = 1  # in seconds
-
                 # Used to keep track of the first time through a loop
                 vacuum = False
 
@@ -101,6 +101,10 @@ class SafetyCheck(Thread):
                     Logging.logEvent("Debug", "Status Update",
                                      {"message": "Running Safety Checker Thread",
                                       "level": 4})
+
+                    # print("Number of Threads: {}".format(threading.active_count()))
+                    # for t in threading.enumerate():
+                    #     print("Thread: {}".format(t.name))
 
                     tempErrorDict = {
                         "System Alarm: High Temperature": False,
@@ -124,39 +128,44 @@ class SafetyCheck(Thread):
                                 "actions": ["Log Event"]
                         }
                         self.logEvent(error_log)
+                        if ProfileInstance.getInstance().activeProfile:
+                            ProfileInstance.getInstance().activeProfile = False
+                            d_out = HardwareStatusInstance.getInstance().pc_104.digital_out
+                            d_out.update({"IR Lamp 1 PWM DC": 0})
+                            d_out.update({"IR Lamp 2 PWM DC": 0})
+                            d_out.update({"IR Lamp 3 PWM DC": 0})
+                            d_out.update({"IR Lamp 4 PWM DC": 0})
+                            d_out.update({"IR Lamp 5 PWM DC": 0})
+                            d_out.update({"IR Lamp 6 PWM DC": 0})
+                            d_out.update({"IR Lamp 7 PWM DC": 0})
+                            d_out.update({"IR Lamp 8 PWM DC": 0})
+                            d_out.update({"IR Lamp 9 PWM DC": 0})
+                            d_out.update({"IR Lamp 10 PWM DC": 0})
+                            d_out.update({"IR Lamp 11 PWM DC": 0})
+                            d_out.update({"IR Lamp 12 PWM DC": 0})
+                            d_out.update({"IR Lamp 13 PWM DC": 0})
+                            d_out.update({"IR Lamp 14 PWM DC": 0})
+                            d_out.update({"IR Lamp 15 PWM DC": 0})
+                            d_out.update({"IR Lamp 16 PWM DC": 0})
+
+                            HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Shroud Duty Cycle', 0])
+                            HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Platen Duty Cycle', 0])
 
                     for tc in hardwareStatusInstance.thermocouples.recently_disconnected:
                         error_log = {
                             "time": str(datetime.now()),
-                                "event": "Thermocouple Disconnected",
+                                "event": "Thermocouple {} Disconnected".format(tc.Thermocouple),
                                 "item": "Thermocouple",
                                 "itemID": tc.Thermocouple,
-                                "details": "Thermocouple lost",
+                                "details": "Thermocouple(s) lost: {}".format(list(tc.Thermocouple for tc in hardwareStatusInstance.thermocouples.recently_disconnected)),
                                 "actions": ["Log Event"]
                         }
+                        print("TC {} has been removed".format(tc.Thermocouple))
+                        print("the list length: {}".format(len(hardwareStatusInstance.thermocouples.recently_disconnected)))
                         self.logEvent(error_log)
+                        print("After Event log")
                         hardwareStatusInstance.thermocouples.recently_disconnected.remove(tc)
 
-                        # if ProfileInstance.getInstance().activeProfile:
-                        #     d_out.update({"IR Lamp 1 PWM DC": 0})
-                        #     d_out.update({"IR Lamp 2 PWM DC": 0})
-                        #     d_out.update({"IR Lamp 3 PWM DC": 0})
-                        #     d_out.update({"IR Lamp 4 PWM DC": 0})
-                        #     d_out.update({"IR Lamp 5 PWM DC": 0})
-                        #     d_out.update({"IR Lamp 6 PWM DC": 0})
-                        #     d_out.update({"IR Lamp 7 PWM DC": 0})
-                        #     d_out.update({"IR Lamp 8 PWM DC": 0})
-                        #     d_out.update({"IR Lamp 9 PWM DC": 0})
-                        #     d_out.update({"IR Lamp 10 PWM DC": 0})
-                        #     d_out.update({"IR Lamp 11 PWM DC": 0})
-                        #     d_out.update({"IR Lamp 12 PWM DC": 0})
-                        #     d_out.update({"IR Lamp 13 PWM DC": 0})
-                        #     d_out.update({"IR Lamp 14 PWM DC": 0})
-                        #     d_out.update({"IR Lamp 15 PWM DC": 0})
-                        #     d_out.update({"IR Lamp 16 PWM DC": 0})
-                        # 
-                        #     HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Shroud Duty Cycle', 0])
-                        #     HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Platen Duty Cycle', 0])
                     overheated_tc = False
                     for tc in TCs:
                         # if there are any TC's higher than max temp
@@ -335,13 +344,14 @@ class SafetyCheck(Thread):
 
                         # end if vacuum in bad condintion
                     # end if root
-                    time.sleep(SLEEP_TIME)
+                    time.sleep(self.SLEEP_TIME)
             # end of inner while true loop
             except Exception as e:
                 Logging.debugPrint(1, "Error in Safety Checker: {}".format(str(e)))
+                raise e
                 if Logging.debug:
                     raise e
-                time.sleep(SLEEP_TIME)
+                time.sleep(self.SLEEP_TIME)
         # end of try/except
 
     # end of outer while true
@@ -362,7 +372,7 @@ class SafetyCheck(Thread):
 
         Logging.debugPrint(4, "Running Safety Checker Thread")
         # Not sure what to do with this
-        if not self.errorDict[error["event"]]:
+        if not self.errorDict.get(error["event"],False):
             # The error has not been on, and is now on
             # Log SQL stuff
             pass

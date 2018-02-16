@@ -101,7 +101,7 @@ def send_receive(address, parm=349, data_str=None):
             pass
             raise RuntimeError("Pfeiffer Gauge Not Replying")
 
-        print("reply: \""+resp+"\"")
+        # print("reply: \""+resp+"\"")
         if response_good(address, resp, parm):
             break
         print("Try number: " + str(tries))

@@ -19,7 +19,7 @@ from Logging.Logging import Logging
 class PfeifferGaugeUpdater(Thread):
     def __init__(self, parent=None, group=None, target=None, name=None,
                  args=(), kwargs=None, verbose=None):
-        Thread.__init__(self, group=group, target=target, name=name)
+        Thread.__init__(self, group=group, target=target, name="PfeifferGaugeUpdater")
         self.args = args
         self.kwargs = kwargs
         self.parent = parent
@@ -31,7 +31,13 @@ class PfeifferGaugeUpdater(Thread):
         self.pressure_read_peroid = 0.5  # 0.5s loop period
         self.param_period = 5  # 5 second period
 
-    def logPressureData(self):
+        self.number_continuous_errors = 0
+        self.MAX_NUMBER_OF_ERRORS = 1
+
+        # sleep time in seconds
+        self.sleep_time = .1
+
+    def log_pressure_data(self):
         coloums = "( profile_I_ID, guage, pressure, time )"
         values  = "( \"{}\",{},{},\"{}\" ),\n".format(self.zoneProfiles.profileUUID,
                                                self.gauges.get_cryopump_address(),
@@ -46,15 +52,8 @@ class PfeifferGaugeUpdater(Thread):
                                             self.gauges.get_roughpump_pressure(),
                                             datetime.datetime.fromtimestamp(time.time()))
         sql = "INSERT INTO tvac.Pressure {} VALUES {};".format(coloums, values)
-        mysql = MySQlConnect()
-        try:
-            mysql.cur.execute(sql)
-            mysql.conn.commit()
-        except Exception as e:
-            print(sql)
-            Logging.debugPrint(1, "Error in logPressureData, PfeifferGaugeUpdater: {}".format(str(e)))
-            if Logging.debug:
-                raise e
+        HardwareStatusInstance.getInstance().sql_list.append(sql)
+
 
     def run(self):
 
@@ -72,10 +71,10 @@ class PfeifferGaugeUpdater(Thread):
                     user_name = "user"
                 if "root" in user_name:
                     self.read_all_params()
-                next_pressure_read_time = time.time()
+                # next_pressure_read_time = time.time()
                 next_param_read_time = time.time()
                 while True:
-                    next_pressure_read_time += self.pressure_read_peroid
+                    # next_pressure_read_time += self.pressure_read_peroid
                     if "root" in user_name:
                         self.gauges.update([{'addr': 1, 'Pressure': self.Pgauge.GetPressure(1)},
                                             {'addr': 2, 'Pressure': self.Pgauge.GetPressure(2)},
@@ -115,22 +114,24 @@ class PfeifferGaugeUpdater(Thread):
                                           "level": 3})
 
                         if ProfileInstance.getInstance().record_data:
-                            self.logPressureData()
+                            self.log_pressure_data()
                         next_param_read_time += self.param_period
 
                         Logging.logEvent("Debug", "Status Update",
                                  {"message": "Current Pressure in Chamber is {}".format(self.gauges.get_chamber_pressure()),
                                   "level": 4})
 
-                    currentTime = time.time()
-                    if currentTime < next_pressure_read_time:
-                        time.sleep(next_pressure_read_time - currentTime)
+                    time.sleep(self.sleep_time)
 
                     HardwareStatusInstance.getInstance().pfeiffer_gauge_power = True
+                    self.number_continuous_errors = 0
                 # End inner while True
             # End try
             except Exception as e:
-                HardwareStatusInstance.getInstance().pfeiffer_gauge_power = False
+                print("PG errors: {}".format(self.number_continuous_errors))
+                self.number_continuous_errors += 1
+                if self.number_continuous_errors >= self.MAX_NUMBER_OF_ERRORS:
+                    HardwareStatusInstance.getInstance().pfeiffer_gauge_power = False
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                 Logging.logEvent("Error", "Pfeiffer Interface Thread",
@@ -145,6 +146,7 @@ class PfeifferGaugeUpdater(Thread):
                                   "level": 1})
                 if Logging.debug:
                     raise e
+                # Sleep to let system "cool down" afte error
                 time.sleep(4)
             #end Except
         #end outer while true
@@ -175,20 +177,20 @@ class PfeifferGaugeUpdater(Thread):
                        'Pirani Correction': self.Pgauge.GetCorrPir(3)}]
         self.gauges.update(paramslist)
 
-if __name__ == '__main__':
-    # adding debug info
-    if(len(sys.argv)>1):
-        for arg in sys.argv:
-            if arg.startswith("-v"):
-                Logging.verbose = arg.count("v")
-    Logging.logEvent("Debug","Status Update",
-        {"message": "Debug on: Level {}".format(Logging.verbose),
-         "level":1})
-    thread = PfeifferGaugeUpdater()
-    thread.daemon = True
-    thread.start()
-
-    p = HardwareStatusInstance.getInstance().pfeiffer_gauges
-    while True:
-        time.sleep(5)
-        print(p.getJson())
+# if __name__ == '__main__':
+#     # adding debug info
+#     if(len(sys.argv)>1):
+#         for arg in sys.argv:
+#             if arg.startswith("-v"):
+#                 Logging.verbose = arg.count("v")
+#     Logging.logEvent("Debug","Status Update",
+#         {"message": "Debug on: Level {}".format(Logging.verbose),
+#          "level":1})
+#     thread = PfeifferGaugeUpdater()
+#     thread.daemon = True
+#     thread.start()
+#
+#     p = HardwareStatusInstance.getInstance().pfeiffer_gauges
+#     while True:
+#         time.sleep(5)
+#         print(p.getJson())

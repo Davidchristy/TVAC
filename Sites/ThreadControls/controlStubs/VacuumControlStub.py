@@ -25,7 +25,7 @@ class VacuumControlStub(Thread):
                          {"message": "Creating VacuumControlStub:",
                           "level": 3})
 
-        Thread.__init__(self, group=group, target=target, name=name)
+        Thread.__init__(self, group=group, target=target, name="VacuumControlStub")
         self.args = args
         self.kwargs = kwargs
 
@@ -45,6 +45,8 @@ class VacuumControlStub(Thread):
         self.roughPumpPressure = None
 
         self.updatePeriod = 1
+
+        self.time_since_last_sleep = time.time()
 
     def run(self):
         # While true to restart the thread if it errors out

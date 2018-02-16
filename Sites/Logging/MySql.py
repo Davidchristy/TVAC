@@ -21,7 +21,7 @@ class MySQlConnect:
             host = "localhost"
             password = "Go2Mars!"
         database = "tvac"
-
+        
         filterwarnings('ignore', category = pymysql.Warning)
         self.conn = pymysql.connect(host=host, user=user, passwd=password, db=database)
         self.cur = self.conn.cursor(pymysql.cursors.DictCursor)

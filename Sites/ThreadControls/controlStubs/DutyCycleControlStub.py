@@ -3,7 +3,7 @@ import time
 import datetime
 import sys
 import os
-
+import math
 
 from Collections.ProfileInstance import ProfileInstance
 from Collections.HardwareStatusInstance import HardwareStatusInstance
@@ -266,6 +266,56 @@ def create_expected_values(set_points, zone_name, interval_time, zone_number, st
 
     return expected_temp_values, expected_time_values, set_point_start_times
 
+def enter_safe_mode(error_mesg):
+    ProfileInstance.getInstance().activeProfile = False
+    Logging.debugPrint(1, error_mesg)
+    print(error_mesg)
+    d_out = HardwareStatusInstance.getInstance().pc_104.digital_out
+    d_out.update({"IR Lamp 1 PWM DC": 0})
+    d_out.update({"IR Lamp 2 PWM DC": 0})
+    d_out.update({"IR Lamp 3 PWM DC": 0})
+    d_out.update({"IR Lamp 4 PWM DC": 0})
+    d_out.update({"IR Lamp 5 PWM DC": 0})
+    d_out.update({"IR Lamp 6 PWM DC": 0})
+    d_out.update({"IR Lamp 7 PWM DC": 0})
+    d_out.update({"IR Lamp 8 PWM DC": 0})
+    d_out.update({"IR Lamp 9 PWM DC": 0})
+    d_out.update({"IR Lamp 10 PWM DC": 0})
+    d_out.update({"IR Lamp 11 PWM DC": 0})
+    d_out.update({"IR Lamp 12 PWM DC": 0})
+    d_out.update({"IR Lamp 13 PWM DC": 0})
+    d_out.update({"IR Lamp 14 PWM DC": 0})
+    d_out.update({"IR Lamp 15 PWM DC": 0})
+    d_out.update({"IR Lamp 16 PWM DC": 0})
+    HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Shroud Duty Cycle', 0])
+    HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Platen Duty Cycle', 0])
+
+def log_expected_temperature_data(data):
+    '''
+    data = {
+         "expected_temp_values": expected_temp_values,
+         "expected_time_values": expected_time_values,
+         "Zone"                : self.args[0],
+         "profileUUID"         : self.zoneProfile.profileUUID,
+    '''
+    expected_temp_values = data["expected_temp_values"]
+    expected_time_values = data["expected_time_values"]
+    zone = data["zone"]
+    profile = data["profileUUID"]
+
+    coloums = "( profile_I_ID, time, zone, temperature )"
+    values = ""
+    for i in range(len(expected_temp_values)):
+        time_str = expected_time_values[i]
+        time_str = datetime.datetime.fromtimestamp(time_str)
+
+        temperature = expected_temp_values[i]
+        values += "( \"{}\", \"{}\", {}, {} ),\n".format(profile, time_str.strftime('%Y-%m-%d %H:%M:%S'), int(zone[4:]),
+                                                         temperature)
+
+    sql = "INSERT INTO tvac.Expected_Temperature {} VALUES {};".format(coloums, values[:-2])
+    HardwareStatusInstance.getInstance().sql_list.append(sql)
+
 class ZoneControlStub:
     def __init__(self, name, lamps=None, parent=None):
         Logging.logEvent("Debug","Status Update", 
@@ -306,6 +356,15 @@ class ZoneControlStub:
         Given that temp_temperature is assigned to a value, this will 
         update the duty cycle for the lamps
         """
+        # print("{}: avg ({})\goal({}) -- {}".format(self.name,
+        #                                                            self.zone_profile.getTemp(self.zone_profile.average),
+        #                                                            self.temp_temperature,
+        #                                                            self.duty_cycle))
+
+        if math.isnan(self.zone_profile.getTemp(self.zone_profile.average)):
+            enter_safe_mode("A controled TC has been removed or is unreadable")
+            return False
+
 
         self.pid.SetPoint = self.temp_temperature
         self.pid.update(self.zone_profile.getTemp(self.zone_profile.average))
@@ -343,19 +402,19 @@ class ZoneControlStub:
                 {"message": "{}: Current duty Cycle: {}".format(self.name,self.duty_cycle),
                 "level":2})
 
-        Logging.logExpectedTemperatureData(
+        log_expected_temperature_data(
         {"expected_temp_values": [self.temp_temperature],
          "expected_time_values": [time.time()],
          "zone"                : self.name,
          "profileUUID"         : self.zone_profile.profileUUID,
          "ProfileInstance"     : ProfileInstance.getInstance()
         })
+        return True
     # end update_duty_cycle
 
 
-
 def update_db_with_end_time():
-    sql = "update tvac.Profile_Instance set endTime=\"{}\" where endTime is null;".format(datetime.datetime.fromtimestamp(time.time()))
+    sql = "UPDATE tvac.Profile_Instance set endTime=\"{}\" where endTime is null;".format(datetime.datetime.fromtimestamp(time.time()))
     mysql = MySQlConnect()
     try:
         mysql.cur.execute(sql)
@@ -382,7 +441,7 @@ class DutyCycleControlStub(Thread):
 
         self.zoneProfiles = ProfileInstance.getInstance().zoneProfiles
         self.parent = parent
-        Thread.__init__(self)
+        Thread.__init__(self, name="DutyCycleControlStub")
         self.updatePeriod = ProfileInstance.getInstance().zoneProfiles.updatePeriod
         self.d_out        = HardwareStatusInstance.getInstance().pc_104.digital_out
 
@@ -407,6 +466,8 @@ class DutyCycleControlStub(Thread):
         self.startTime = None
         self.expected_time_values = None
         self.set_points_start_time = None
+
+        self.time_since_last_sleep = time.time()
 
 
     def run(self):
@@ -448,7 +509,7 @@ class DutyCycleControlStub(Thread):
                       "details":"There is a software error ({})".format(e)
                     })
 
-
+                    raise e
                     if Logging.debug:
                         raise e
                 # end of try, catch
@@ -550,9 +611,14 @@ class DutyCycleControlStub(Thread):
             self.check_hold()
             self.update_set_point_state(current_set_point, ramp_temporary, soak_temporary)
             # With the temp goal temperature picked, make the duty cycle
-            self.update_all_duty_cycles()
+            passed = self.update_all_duty_cycles()
+            if not passed:
+                # If it failed to update the duty cycle, there has been an error and you need to break out of loop
+                break
             # sleep until the next time around
+            # print("Thread: {} \tcurrent loop time: {}".format(self.name, time.time() - self.time_since_last_sleep))
             time.sleep(self.updatePeriod)
+            # self.time_since_last_sleep = time.time()
         # end of inner while True
 
     def update_all_duty_cycles(self):
@@ -561,13 +627,19 @@ class DutyCycleControlStub(Thread):
             if zone.zone_profile.activeZoneProfile:
                 # This checks to see if a current temp has been made...
                 if zone.temp_temperature:
-                    zone.update_duty_cycle()
+                    passed = zone.update_duty_cycle()
+                    if not passed:
+                        return False
                 else:
                     # TODO: Why is "Waiting..." here?
                     print("Waiting...")
 
             if len(self.expected_time_values) <= 0:
                 break
+            #end if
+        #end for loop
+        return True
+    # end func
 
     def update_set_point_state(self, current_set_point, ramp_temporary, soak_temporary):
         # compare the temps just made with the values in self.
@@ -578,12 +650,13 @@ class DutyCycleControlStub(Thread):
                              {"message": "Profile {} has entered setpoint {} Ramp".format(
                                  ProfileInstance.getInstance().zoneProfiles.profileName, current_set_point),
                               "ProfileInstance": ProfileInstance.getInstance()})
+            ProfileInstance.getInstance().inRamp = True
         if soak_temporary == True and self.soak == False and current_set_point > 1:
             Logging.logEvent("Event", "Profile",
                              {"message": "Profile {} has entered setpoint {} Soak".format(
                                  ProfileInstance.getInstance().zoneProfiles.profileName, current_set_point - 1),
                               "ProfileInstance": ProfileInstance.getInstance()})
-            ProfileInstance.getInstance.inRamp = False
+            ProfileInstance.getInstance().inRamp = False
         self.ramp = ramp_temporary
         self.soak = soak_temporary
 
@@ -591,6 +664,8 @@ class DutyCycleControlStub(Thread):
         # this will find the time value matching the current time
         # and give us the temp value it should be at that time.
         while current_time > self.expected_time_values[0]:
+            print("expected_time_values: {}".format(self.expected_time_values))
+            print(time.time())
             for zone in self.zones:
                 if self.zones[zone].zone_profile.activeZoneProfile:
                     self.zones[zone].temp_temperature = self.zones[zone].expected_temp_values[0]
@@ -626,40 +701,67 @@ class DutyCycleControlStub(Thread):
             start_hold_time = int(time.time())
 
             Logging.logEvent("Event","Hold Start",
-            {"message": "In hold for first time",
+            {"message": "Starting Hold",
             "ProfileInstance"     : ProfileInstance.getInstance()})
             while ProfileInstance.getInstance().inHold:
+                print("In hold")
                 for zone in self.zones:
                     zone = self.zones[zone]
                     if zone.zone_profile.activeZoneProfile:
-                        # self.temp_temperature =
+                        zone.temp_temperature = zone.expected_temp_values[0]
                         zone.update_duty_cycle()
                 time.sleep(.5)
 
             end_hold_time = int(time.time())
             hold_time = end_hold_time - start_hold_time
-            self.startTime = self.startTime + hold_time
+            print("In hold for {} secs".format(hold_time))
+            print("Old start time: {}".format(self.startTime))
+            tmp_start_time = None
+            print("Start Time: {}\ttype: {}".format(self.startTime,type(self.startTime)))
+            if type(self.startTime) == float:
+                tmp_start_time = datetime.datetime.fromtimestamp(self.startTime)
+                tmp_start_time = tmp_start_time.timetuple()
+            elif type(self.startTime) == int:
+                tmp_start_time = datetime.datetime.fromtimestamp(self.startTime)
+                tmp_start_time = tmp_start_time.timetuple()
+            elif type(self.startTime) == datetime.datetime:
+                tmp_start_time = self.startTime.timetuple()
+            else:
+                raise TypeError("startTime is unknown type")
+            self.startTime = time.mktime(tmp_start_time) + hold_time
+            self.zoneProfiles.thermalStartTime = self.startTime 
             Logging.logEvent("Event","HoldEnd",
-            {"message": "Just Left hold",
+            {"message": "Ending Hold",
             "ProfileInstance"     : ProfileInstance.getInstance()})
+            print("New start time: {}".format(self.startTime))
             Logging.logEvent("Debug","Status Update",
             {"message": "Leaving hold after {} seconds in hold, new startTime {}".format(hold_time, self.startTime),
             "ProfileInstance"     : ProfileInstance.getInstance(),
             "level":2})
             # regenerate expected time, moving things forward to account for hold
+            # last_zone_used = None
             for zone in self.zones:
                 zone = self.zones[zone]
                 if zone.zone_profile.activeZoneProfile:
+                    # last_zone_used = zone
                     zone.expected_temp_values = create_expected_temp_values(zone.zone_profile.thermalProfiles,
                                                                             self.updatePeriod, zone.zone_profile.zone,
                                                                             start_time=self.zoneProfiles.thermalStartTime)
-            self.expected_time_values = create_expected_time_values(zone.zone_profile.thermalProfiles,
-                                                                    self.updatePeriod,
-                                                                    start_time=self.zoneProfiles.thermalStartTime)
-            self.parent.set_points_start_time = create_expected_set_start_times(zone.zone_profile.thermalProfiles,
-                                                                               start_time=self.zoneProfiles.thermalStartTime)
+
+            for zone in self.zones:
+                zone = self.zones[zone]
+                if zone.zone_profile.activeZoneProfile:
+                    self.expected_time_values = create_expected_time_values(zone.zone_profile.thermalProfiles,
+                                                                            self.updatePeriod,
+                                                                            start_time=self.zoneProfiles.thermalStartTime)
+                    self.parent.set_points_start_time = create_expected_set_start_times(zone.zone_profile.thermalProfiles,
+                                                                                       start_time=self.zoneProfiles.thermalStartTime)
+                    break
+
         except Exception as e:
             Logging.debugPrint(1, "DCCS: Error in check Hold, Duty Cycle: {}".format(str(e)))
+            print("DCCS: Error in check Hold, Duty Cycle: {}".format(str(e)))            
+            raise e
             if Logging.debug:
                 raise e
 

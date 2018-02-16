@@ -19,7 +19,7 @@ from Logging.Logging import Logging
 class TdkLambdaUpdater(Thread):
     def __init__(self, parent=None, group=None, target=None, name=None,
                  args=(), kwargs=None, verbose=None):
-        Thread.__init__(self, group=group, target=target, name=name)
+        Thread.__init__(self, group=group, target=target, name="TdkLambdaUpdater")
         self.args = args
         self.kwargs = kwargs
         self.parent = parent
@@ -28,6 +28,11 @@ class TdkLambdaUpdater(Thread):
         self.zoneProfiles = ProfileInstance.getInstance().zoneProfiles
         self.hw = HardwareStatusInstance.getInstance()
         self.ps_read_peroid = 4.0  # 0.5s loop period
+
+        self.number_continuous_errors = 0
+        self.MAX_NUMBER_OF_ERRORS = 3
+
+        self.sleep_time = 1
 
     # def logVoltagesData(self):
       # TODO: delete or update DB to hold this
@@ -70,6 +75,7 @@ class TdkLambdaUpdater(Thread):
                                  "level": 2})
 
                 if "root" in userName:
+                    # print("TDK starting...")
                     self.pwr_supply.open_port()
                     update_power_supplies = [{'addr': self.hw.tdk_lambda_ps.get_platen_left_addr()},
                                              {'addr': self.hw.tdk_lambda_ps.get_platen_right_addr()},
@@ -89,7 +95,7 @@ class TdkLambdaUpdater(Thread):
                         ps.update(self.pwr_supply.get_mode())
                     self.hw.tdk_lambda_ps.update(update_power_supplies)
                 next_status_read_time = time.time()
-                while True:
+                while self.hw.operational_vacuum:
                     next_status_read_time += self.ps_read_peroid
                     if "root" in userName:
                         # TODO: Not sure on the location of flush port
@@ -103,10 +109,15 @@ class TdkLambdaUpdater(Thread):
                             if not self.hw.operational_vacuum and self.hw.tdk_lambda_ps.get_val(ps['addr'], 'output enable'):
                                 Logging.debugPrint(2,"TDK, either not in vacuum, or turned off")
                                 self.pwr_supply.set_out_off()
-                            ps.update(self.pwr_supply.get_status())
                             ps.update(self.pwr_supply.get_out())
-                            ps.update(self.pwr_supply.get_mode())
+                            # ps.update(self.pwr_supply.get_status())
+                            # ps.update(self.pwr_supply.get_mode())
                         self.hw.tdk_lambda_ps.update(update_power_supplies)
+                        if not self.hw.operational_vacuum:
+                            for ps in update_power_supplies:
+                                self.pwr_supply.set_addr(ps['addr'])
+                                self.pwr_supply.set_out_off()
+                            break
                         while len(self.hw.tdk_lambda_cmds):
                             self.Process_Commands(self.hw.tdk_lambda_cmds.pop(0))
                     else:
@@ -123,11 +134,14 @@ class TdkLambdaUpdater(Thread):
                         # end test else
                         time.sleep(5)
                     HardwareStatusInstance.getInstance().tdk_lambda_power = True
-                    if time.time() < next_status_read_time:
-                        time.sleep(next_status_read_time - time.time())
+                    self.number_continuous_errors = 0
+                    time.sleep(self.sleep_time)
 
             except Exception as e:
-                HardwareStatusInstance.getInstance().tdk_lambda_power = False
+                self.number_continuous_errors += 1
+                # print("TDK Errors: {}".format(self.number_continuous_errors))
+                if self.number_continuous_errors >= self.MAX_NUMBER_OF_ERRORS:
+                    HardwareStatusInstance.getInstance().tdk_lambda_power = False
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                 Logging.logEvent("Error", "TDK Lambda Power Supplies Interface Thread",
@@ -144,6 +158,8 @@ class TdkLambdaUpdater(Thread):
                                  {"message": "There was a {} error in TdkLambdaUpdater. File: {}:{}\n{}".format(
                                      exc_type, fname, exc_tb.tb_lineno, e),
                                   "level": 1})
+                print("There was a {} error in TdkLambdaUpdater. File: {}:{}\n{}".format(
+                                     exc_type, fname, exc_tb.tb_lineno, e))
                 if Logging.debug:
                     raise e
                 if "root" in userName:

@@ -43,11 +43,11 @@ class Logging(object):
             values = "( \"{}\",\"{}\" )".format(category,logType)
             sql = "INSERT INTO tvac.Event {} VALUES {};".format(coloums, values)
             try:
-            	mysql = MySQlConnect()
-            	mysql.cur.execute(sql)
-            	mysql.conn.commit()
+                mysql = MySQlConnect()
+                mysql.cur.execute(sql)
+                mysql.conn.commit()
             except Exception as e:
-            	Logging.debugPrint(1, "Error: {}".format(e))
+                Logging.debugPrint(1, "Error: {}".format(e))
         elif category is "Debug":
             if "Status Update" in logType:
                 Logging.debugPrint(data["level"],data['message'])
@@ -131,7 +131,6 @@ class Logging(object):
         'alarm': tc_alarm
         }
         '''
-        testList = [7,9,10,11,12,91,92,100,105,110,115,120]
 
         time = data["time"]
         profile = data["profileUUID"]
@@ -147,6 +146,7 @@ class Logging(object):
         sql = "INSERT INTO tvac.Real_Temperature {} VALUES {};".format(coloums, values[:-2])
 
         sql.replace("nan", "NULL")
+
         try:
             mysql = MySQlConnect()
             mysql.cur.execute(sql)

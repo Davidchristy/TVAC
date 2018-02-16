@@ -36,6 +36,8 @@ class HardwareStatusInstance:
             self.tdk_lambda_cmds = []  # ['cmd', arg, arg,... arg]
             self.pc_104 = PC_104_Instance.getInstance()
 
+            self.sql_list = []
+
             # System Wide Stats
             if os.name == "posix":
                 user_name = os.environ['LOGNAME']
@@ -56,5 +58,7 @@ class HardwareStatusInstance:
             self.pc_104_power = True
 
             self.overheated_tc = False
+
+            self.duty_cycle_errors = []
 
             HardwareStatusInstance.__instance = self

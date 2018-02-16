@@ -9,8 +9,10 @@ class Shi_Mcc:
 
     def __init__(self):
         self.port = None
-        self.port_listener = TTY_Reader(None)
+        self.port_listener = TTY_Reader(None,name="Shi_Mcc_Reader")
         self.port_listener.daemon = True
+
+        self.time_since_last_cmd = time.time()
 
     def open_port(self):
         self.port = open('/dev/ttyxuart0', 'r+b', buffering=0)
@@ -32,6 +34,8 @@ class Shi_Mcc:
         for tries in range(3):
             self.port.write(self.GenCmd(Command).encode())
             resp = self.port_listener.read_line(2.0)
+            #print("cmd: {} time_since_last_cmd: {}\tReply: {}".format(Command,time.time()-self.time_since_last_cmd,resp))
+            self.time_since_last_cmd = time.time()
             if self.ResponceGood(resp):
                 if resp[1] == 'A':  # Responce Good!
                     Data = self.Format_Responce(resp[2:-2])
@@ -131,8 +135,10 @@ class Shi_Mcc:
         vals = {}
         for key in Functions.keys():
             val = Functions[key]()
-            # Logging.debugPrint(3,"Shi mcc val: {}".format(val))
             er |= val['Error']
+            if er:
+                print("run_GetFunctions Error==True")
+                break
             pf |= val['PowerFailure']
             if 'Data' in val:
                 vals[key] = val['Data']

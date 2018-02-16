@@ -18,7 +18,7 @@ class TsRegistersUpdater(Thread):
 
     def __init__(self,parent=None, group=None, target=None, name=None,
                  args=(), kwargs=None, verbose=None):
-        Thread.__init__(self, group=group, target=target, name=name)
+        Thread.__init__(self, group=group, target=target, name="TsRegistersUpdater")
         self.args = args
         self.kwargs = kwargs
 
@@ -30,6 +30,9 @@ class TsRegistersUpdater(Thread):
         self.ir_lamp_pwm = []
         self.time_test = time.time()
         self.parent = parent
+
+        self.number_continuous_errors = 0
+        self.MAX_NUMBER_OF_ERRORS = 3
 
     def run(self):
         while True:
@@ -83,19 +86,29 @@ class TsRegistersUpdater(Thread):
                         self.da_io.digital_in.update(self.ts_reg.dio_read4(2))
                         self.ts_reg.dac_write(self.da_io.analog_out.get_dac_counts(2), 2)
                         self.ts_reg.dac_write(self.da_io.analog_out.get_dac_counts(3), 3)
+                        # removed before Oct 10, commented line so I remember about it
                         # self.read_analog_in()  # loop period is adc_period * 2 seconds
-                        self.wait_for_next_multipule(self.adc_period * 8)
+
+                        # Removed for testing 2/11 2:46pm
+                        # self.wait_for_next_multipule(self.adc_period * 8)
+
+                        # added for testing
+                        time.sleep(.1)
                     else:
                         Logging.logEvent("Debug","Status Update", 
                            {"message": "Test run of PC 104 loop",
                              "level":5})
+                        # Sleeping so it doesn't busy wait on test
                         time.sleep(5)
 
+                    self.number_continuous_errors = 0
                     HardwareStatusInstance.getInstance().pc_104_power = True
                 #end inner while true
             # End try
             except Exception as e:
-                HardwareStatusInstance.getInstance().pc_104_power = False
+                self.number_continuous_errors += 1
+                if self.number_continuous_errors >= self.MAX_NUMBER_OF_ERRORS:
+                    HardwareStatusInstance.getInstance().pc_104_power = False
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                 Logging.logEvent("Error","Hardware Interface Thread", 
@@ -117,6 +130,7 @@ class TsRegistersUpdater(Thread):
                     userName = "user" 
                 if "root" in userName:
                     self.ts_reg.close()
+                # Sleeping so the system has time to "cool off" after error
                 time.sleep(4)
             #end except
         #End outter while true
@@ -128,23 +142,8 @@ class TsRegistersUpdater(Thread):
             time.sleep(sleep_time)
         self.time_test += m
         Logging.debugPrint(6, "Ts Registers Sleep Time: {:0.6f}s".format(sleep_time))
+        print("Ts Registers sleep_time: {:0.6f}s".format(sleep_time))
 
-    def read_analog_in(self):
-        (first_channel, fifo_depth) = self.ts_reg.adc_fifo_status()
-        Logging.debugPrint(4, "FIFO depth: {:d};  First Ch: {:d};  Time: {:0.6f}s".format(fifo_depth,
-                                                                                first_channel,
-                                                                                time.time()-self.time_test))
-        self.time_test = time.time()
-        if fifo_depth < 16:
-            waitTime = self.adc_period * (8 - int(fifo_depth / 2))
-            time.sleep(waitTime)
-            (first_channel, fifo_depth) = self.ts_reg.adc_fifo_status()
-            Logging.debugPrint(4, "FIFO depth: {:d}\twaitTime: {}".format(fifo_depth,waitTime))
-        d = {}
-        for n in range(fifo_depth):
-            d['ADC ' + str((n + first_channel) % 16)] = self.ts_reg.adc_fifo_read()
-        Logging.debugPrint(6,d)
-        self.da_io.analog_in.update(d)
 
     def ir_lamp_pwm_start(self):
         self.ir_lamp_pwm = []
@@ -194,15 +193,31 @@ class TsRegistersUpdater(Thread):
         self.ir_lamp_pwm = []
 
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
+#
+#     # adding debug info
+#     if(len(sys.argv)>1):
+#         for arg in sys.argv:
+#             if arg.startswith("-v"):
+#                 Logging.verbose = arg.count("v")
+#
+#     thread = TsRegistersUpdater()
+#     thread.daemon = True
+#     thread.start()
 
-    # adding debug info
-    if(len(sys.argv)>1):
-        for arg in sys.argv:
-            if arg.startswith("-v"):
-                Logging.verbose = arg.count("v")
-
-    thread = TsRegistersUpdater()
-    thread.daemon = True
-    thread.start()
-
+    # def read_analog_in(self):
+    #     (first_channel, fifo_depth) = self.ts_reg.adc_fifo_status()
+    #     Logging.debugPrint(4, "FIFO depth: {:d};  First Ch: {:d};  Time: {:0.6f}s".format(fifo_depth,
+    #                                                                             first_channel,
+    #                                                                             time.time()-self.time_test))
+    #     self.time_test = time.time()
+    #     if fifo_depth < 16:
+    #         waitTime = self.adc_period * (8 - int(fifo_depth / 2))
+    #         time.sleep(waitTime)
+    #         (first_channel, fifo_depth) = self.ts_reg.adc_fifo_status()
+    #         Logging.debugPrint(4, "FIFO depth: {:d}\twaitTime: {}".format(fifo_depth,waitTime))
+    #     d = {}
+    #     for n in range(fifo_depth):
+    #         d['ADC ' + str((n + first_channel) % 16)] = self.ts_reg.adc_fifo_read()
+    #     Logging.debugPrint(6,d)
+    #     self.da_io.analog_in.update(d)

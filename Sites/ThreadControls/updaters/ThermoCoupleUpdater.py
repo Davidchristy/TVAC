@@ -2,6 +2,7 @@ import os
 import sys
 import time
 from datetime import datetime
+import math
 from threading import Thread
 
 from Collections.HardwareStatusInstance import HardwareStatusInstance
@@ -9,6 +10,43 @@ from Collections.ProfileInstance import ProfileInstance
 from Hardware_Drivers.Keysight_34980A_TCs import Keysight_34980A_TCs
 from Logging.Logging import Logging
 
+
+
+
+def log_live_temperature_data(data):
+    '''
+    data = {
+        "time":		TCs['time'],
+        "tcList":	TCs['tcList'],
+        "ProfileUUID": ProfileUUID,
+    }
+    TCs is a list of dicitations ordered like this....
+    {
+    'Thermocouple': tc_num,
+    'time': tc_time_offset,
+    'temp': tc_tempK,
+    'working': tc_working,
+    'alarm': tc_alarm
+    }
+    '''
+
+    time = data["time"]
+    profile = data["profileUUID"]
+    coloums = "( profile_I_ID, time, thermocouple, temperature )"
+    values = ""
+
+    for tc in data['tcList']:
+        thermocouple = tc["Thermocouple"]
+        temperature = tc["temp"]
+        if math.isnan(tc["temp"]):
+            continue
+        values += "( \"{}\", \"{}\", {}, {} ),\n".format(profile, time.strftime('%Y-%m-%d %H:%M:%S'), thermocouple,
+                                                         temperature)
+    sql = "INSERT INTO tvac.Real_Temperature {} VALUES {};".format(coloums, values[:-2])
+
+    sql.replace("nan", "NULL")
+
+    HardwareStatusInstance.getInstance().sql_list.append(sql)
 
 class ThermoCoupleUpdater(Thread):
     """
@@ -21,6 +59,8 @@ class ThermoCoupleUpdater(Thread):
     """
     __instance = None
 
+
+
     def __init__(self, parent):
         if ThermoCoupleUpdater.__instance:
             raise Exception("This class is a singleton!")
@@ -32,7 +72,9 @@ class ThermoCoupleUpdater(Thread):
             self.parent = parent
             self.hardwareStatusInstance = HardwareStatusInstance
             self.SLEEP_TIME = 5
-            super(ThermoCoupleUpdater, self).__init__()
+            super(ThermoCoupleUpdater, self).__init__(name="ThermoCoupleUpdater")
+            self.number_continuous_errors = 0
+            self.MAX_NUMBER_OF_ERRORS = 2
 
     def run(self):
         """
@@ -104,7 +146,7 @@ class ThermoCoupleUpdater(Thread):
                     }
                     '''
                     if ProfileInstance.getInstance().record_data:
-                        Logging.logLiveTemperatureData({"message": "Current TC reading",
+                        log_live_temperature_data({"message": "Current TC reading",
                              "time":    tc_values['time'],
                              "tcList":  tc_values['tcList'],
                              "profileUUID": ProfileInstance.getInstance().zoneProfiles.profileUUID,
@@ -112,30 +154,38 @@ class ThermoCoupleUpdater(Thread):
 
                     Logging.logEvent("Debug","Data Dump",
                                      {"message": "Current TC reading",
-                         "level":3,
+                         "level":4,
                          "dict":tc_values['tcList']})
 
                     hw_status.thermocouples.update(tc_values)
 
-                    hw_status.thermocouple_power = True
 
+                    hw_status.thermocouple_power = True
+                    self.number_continuous_errors = 0
 
                     time.sleep(self.SLEEP_TIME)
 
             except Exception as e:
-                HardwareStatusInstance.getInstance().thermocouple_power = False
+
+                # Instead of False here, check to see how much time has passed since the first failer
+                # if more than x time (3*SLEEP_TIME)? has has passed with constasnt failer
+                # Acutally through error.
+                self.number_continuous_errors += 1
+                if self.number_continuous_errors >= self.MAX_NUMBER_OF_ERRORS:
+                    HardwareStatusInstance.getInstance().thermocouple_power = False
+
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                 Logging.logEvent("Error","Hardware Interface Thread",
-                        {"type": exc_type,
-                         "filename": fname,
-                         "line": exc_tb.tb_lineno,
-                         "thread": "ThermoCoupleUpdater",
-                         "ProfileInstance": ProfileInstance.getInstance()
-                        })
+                                 {"type": exc_type,
+                                  "filename": fname,
+                                  "line": exc_tb.tb_lineno,
+                                  "thread": "ThermoCoupleUpdater",
+                                  "ProfileInstance": ProfileInstance.getInstance()
+                                  })
                 Logging.logEvent("Debug","Status Update",
-                        {"message": "There was a {} error in ThermoCoupleUpdater. File: {}:{}".format(exc_type,fname,exc_tb.tb_lineno),
-                         "level":1})
+                                 {"message": "There was a {} error in ThermoCoupleUpdater. File: {}:{}".format(exc_type,fname,exc_tb.tb_lineno),
+                                  "level":1})
                 if Logging.debug:
                     raise e
                 # If you want to cleanly close things, do it here

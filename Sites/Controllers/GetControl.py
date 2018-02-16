@@ -67,6 +67,8 @@ def record_data():
 
 
 def run_profile():
+    if not HardwareStatusInstance.getInstance().pc_104.digital_in.chamber_closed:
+        return "{'error':'{}'}".format("Door is open")
     HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Shroud Duty Cycle', 0])
     HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Disable Shroud Output'])
     thread_instance = ThreadCollectionInstance.getInstance()
@@ -158,6 +160,7 @@ def get_shi_temps():
 
 
 def hard_stop():
+    print("Hard Stop called")
     try:
         Logging.debugPrint(1,"Hard stop has been called")
         d_out = HardwareStatusInstance.getInstance().pc_104.digital_out
@@ -303,7 +306,7 @@ def vacuum_not_needed():
 def un_hold_all_zones():
     try:
         thread_instance = ThreadCollectionInstance.getInstance()
-        thread_instance.threadCollection.holdThread()
+        thread_instance.threadCollection.releaseHoldThread()
     except Exception as e:
         return "{'error':'{}'}".format(e)
     return "{'result':'success'}"
@@ -344,17 +347,20 @@ def get_all_thermocouple_data():
 
 
 def put_under_vacuum():
-    sql = "UPDATE System_Status SET vacuum_wanted=1;"
-    try:
-        mysql = MySQlConnect()
-        mysql.cur.execute(sql)
-        mysql.conn.commit()
-        ProfileInstance.getInstance().vacuumWanted = True
-        return "{'result':'success'}"
-    except Exception as e:
-        Logging.debugPrint(3, "sql: {}".format(sql))
-        Logging.debugPrint(1, "Error in ThreadCollection, holdThread: {}".format(str(e)))
-        return "{'error':'{}'}".format(e)
+    if HardwareStatusInstance.getInstance().pc_104.digital_in.chamber_closed:
+        sql = "UPDATE System_Status SET vacuum_wanted=1;"
+        try:
+            mysql = MySQlConnect()
+            mysql.cur.execute(sql)
+            mysql.conn.commit()
+            ProfileInstance.getInstance().vacuumWanted = True
+            return "{'result':'success'}"
+        except Exception as e:
+            Logging.debugPrint(3, "sql: {}".format(sql))
+            Logging.debugPrint(1, "Error in ThreadCollection, holdThread: {}".format(str(e)))
+            return "{'error':'{}'}".format(e)
+    else:
+        return "{'result':'Error: Door is open'}"
 
 def chamber_door_status():
     try:
@@ -380,10 +386,10 @@ def get_interlock_status():
 
     message = {
         "door_interlock":  HardwareStatusInstance.getInstance().pc_104.digital_in.chamber_closed ,
-        "overTemp" : HardwareStatusInstance.getInstance().overheated_tc,
-        "overPressure": not HardwareStatusInstance.getInstance().operational_vacuum,
-        "roughing_pump_valve_open": HardwareStatusInstance.getInstance().pc_104.digital_in.getVal('RoughP_GV_Open'),
-        "roughing_pump_valve_closed": HardwareStatusInstance.getInstance().pc_104.digital_in.getVal('RoughP_GV_Closed'),
+        "overTemp" : not HardwareStatusInstance.getInstance().overheated_tc,
+        "overPressure": HardwareStatusInstance.getInstance().operational_vacuum,
+        "roughing_pump_valve_open": HardwareStatusInstance.getInstance().pc_104.digital_out.getVal('RoughP GateValve'),
+        "roughing_pump_valve_closed": not HardwareStatusInstance.getInstance().pc_104.digital_out.getVal('RoughP GateValve'),
         "thermocouple": HardwareStatusInstance.getInstance().thermocouple_power,
         "pfeiffer_gauge": HardwareStatusInstance.getInstance().pfeiffer_gauge_power,
         "ln2_shroud_open": HardwareStatusInstance.getInstance().pc_104.digital_in.getVal('LN2_S_Sol_Open'),
@@ -397,6 +403,9 @@ def get_interlock_status():
         "shi_compressor": HardwareStatusInstance.getInstance().shi_compressor_power,
         "shi_mcc": HardwareStatusInstance.getInstance().shi_mcc_power,
     }
-
     return json.dumps(message)
 
+def get_sql_data():
+    sql_list = HardwareStatusInstance.getInstance().sql_list[:]
+    HardwareStatusInstance.getInstance().sql_list = []
+    return {"sql_data":sql_list}

@@ -15,6 +15,7 @@ from ThreadControls.updaters.ShiCompressorUpdater import ShiCompressorUpdater
 from ThreadControls.updaters.ThermoCoupleUpdater import ThermoCoupleUpdater
 from ThreadControls.updaters.TdkLambdaUpdater import TdkLambdaUpdater
 from ThreadControls.updaters.TsRegistersUpdater import TsRegistersUpdater
+from Collections.HardwareStatusInstance import HardwareStatusInstance
 
 
 class ThreadCollection:
@@ -100,13 +101,14 @@ class ThreadCollection:
         coloums = "( profile_name, profile_I_ID, profile_Start_Time )"
         values = "( \"{}\",\"{}\", \"{}\" )".format(self.zoneProfiles.profileName,self.zoneProfiles.profileUUID, datetime.datetime.fromtimestamp(time.time()))
         sql = "INSERT INTO tvac.Profile_Instance {} VALUES {};".format(coloums, values)
+        HardwareStatusInstance.getInstance().sql_list.append(sql)
         # print(sql)
-        mysql = MySQlConnect()
-        try:
-            mysql.cur.execute(sql)
-            mysql.conn.commit()
-        except Exception as e:
-            return e
+        # mysql = MySQlConnect()
+        # try:
+        #     mysql.cur.execute(sql)
+        #     mysql.conn.commit()
+        # except Exception as e:
+        #     return e
 
         return True
 
@@ -119,6 +121,9 @@ class ThreadCollection:
         # Check to make sure there is an active profile in memory
         if not self.zoneProfiles.profileName:
             return "{'Error':'No Profile loaded in memory'}"
+
+        # if ProfileInstance.getInstance().activeProfile:
+        #     return "{'Error':'Profile Already running. Abort profile before starting new one.'}"            
     
         if firstStart:
             result = self.addProfileInstancetoBD()
@@ -137,7 +142,7 @@ class ThreadCollection:
                     {"message": "Zone {} is handled, about the start".format(self.zoneThreadDict[thread].zoneProfile.zone),
                      "level":1})
         except Exception as e:
-            pass
+            print(e)
 
         ProfileInstance.getInstance().activeProfile = True
         Logging.debugPrint(2,"Setting Active Profile to True")

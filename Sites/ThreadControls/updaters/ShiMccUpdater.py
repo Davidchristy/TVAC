@@ -17,7 +17,7 @@ from Logging.Logging import Logging
 class ShiMccUpdater(Thread):
     def __init__(self, parent=None, group=None, target=None, name=None,
                  args=(), kwargs=None, verbose=None):
-        Thread.__init__(self, group=group, target=target, name=name)
+        Thread.__init__(self, group=group, target=target, name="ShiMccUpdater")
         self.args = args
         self.kwargs = kwargs
         self.parent = parent
@@ -26,6 +26,13 @@ class ShiMccUpdater(Thread):
         self.hw = HardwareStatusInstance.getInstance()
         self.mcc_read_period = 1  # 0.5s loop period
         self.param_period = 30  # 10 second period
+
+        self.number_continuous_errors = 0
+        self.MAX_NUMBER_OF_ERRORS = 3
+
+        self.sleep_time = .5
+
+        self.time_since_last_sleep = time.time()
 
     def run(self):
         if os.name == "posix":
@@ -41,6 +48,7 @@ class ShiMccUpdater(Thread):
                 Logging.logEvent("Debug", "Status Update",
                                 {"message": "Starting Shi Mcc Control Stub Thread",
                                 "level": 2})
+                # print("Starting MCC")
 
                 if "root" in userName:
                     # Live systems go here
@@ -80,17 +88,20 @@ class ShiMccUpdater(Thread):
                 next_param_read_time = time.time()
                 # setup is done, this loop is the normal thread loop
                 while True:
-                    next_mcc_read_time = time.time() + self.mcc_read_period
+                    # next_mcc_read_time = time.time() + self.mcc_read_period
                     if "root" in userName:
-                        self.hw.shi_mcc_power = self.hw.pc_104.digital_out.getVal('MCC2 Power')
+                        # self.hw.shi_mcc_power = self.hw.pc_104.digital_out.getVal('MCC2 Power')
                         Logging.logEvent("Debug", "Status Update",
                                          {"message": "Reading and writing with ShiMccUpdater.",
                                           "level": 4})
+                        # print("About to get status")
                         val = self.mcc.get_Status()
+                        # print("Recieved status: {}".format(val))
                         if val['Error']:
                             Logging.logEvent("Debug", "Status Update",
                                              {"message": "Shi MCC Error Response: %s" % val['Response'],
                                               "level": 4})
+                            raise RuntimeError("Communication error has happened with the MCC")
                         else:
                             self.hw.shi_cryopump.update({'MCC Status': val['Response']})
                         Logging.logEvent("Debug", "Status Update",
@@ -184,11 +195,17 @@ class ShiMccUpdater(Thread):
                         f_mcc.close()
 
                     self.hw.shi_mcc_power = True
-                    if time.time() < next_mcc_read_time:
-                        time.sleep(next_mcc_read_time - time.time())
+                    self.number_continuous_errors = 0
+
+                    # print("Thread: {} \tcurrent loop time: {}".format(self.name, time.time()-self.time_since_last_sleep))
+                    time.sleep(self.sleep_time)
+                    self.time_since_last_sleep = time.time()
 
             except Exception as e:
-                self.hw.shi_mcc_power = False
+                self.number_continuous_errors += 1
+                # print("Number of MCC errors: {}".format(self.number_continuous_errors))
+                if self.number_continuous_errors >= self.MAX_NUMBER_OF_ERRORS:
+                    self.hw.shi_mcc_power = False
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                 Logging.logEvent("Error", "Shi MCC Interface Thread",
@@ -234,24 +251,24 @@ class ShiMccUpdater(Thread):
                 self.hw.shi_cryopump.update({'MCC Params': {key: val['Response']}})
 
 
-if __name__ == '__main__':
-    # adding debug info
-    if(len(sys.argv)>1):
-        for arg in sys.argv:
-            if arg.startswith("-v"):
-                Logging.verbose = arg.count("v")
-    Logging.logEvent("Debug","Status Update",
-        {"message": "Debug on: Level {}".format(Logging.verbose),
-         "level":1})
-
-    hw_status = HardwareStatusInstance.getInstance()
-    hw_status.pc_104.digital_out.update({'MCC2 Power': True})
-
-    thread = ShiMccUpdater()
-    thread.daemon = True
-    thread.start()
-
-    while True:
-        time.sleep(5)
-        print(hw_status.shi_cryopump.getJson())
-
+# if __name__ == '__main__':
+#     # adding debug info
+#     if(len(sys.argv)>1):
+#         for arg in sys.argv:
+#             if arg.startswith("-v"):
+#                 Logging.verbose = arg.count("v")
+#     Logging.logEvent("Debug","Status Update",
+#         {"message": "Debug on: Level {}".format(Logging.verbose),
+#          "level":1})
+#
+#     hw_status = HardwareStatusInstance.getInstance()
+#     hw_status.pc_104.digital_out.update({'MCC2 Power': True})
+#
+#     thread = ShiMccUpdater()
+#     thread.daemon = True
+#     thread.start()
+#
+#     while True:
+#         time.sleep(5)
+#         print(hw_status.shi_cryopump.getJson())
+#

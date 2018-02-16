@@ -152,6 +152,7 @@ class Keysight_34980A_TCs(Telnet):
 if __name__ == '__main__':
     ks = Keysight_34980A_TCs()
 
-    for i in range(1):
-        tcs = ks.getTC_Values()
-        print(tcs)
+    for i in range(100):
+        # tcs = ks.getTC_Values()
+        ks.write("lol".encode())
+        # print(tcs)

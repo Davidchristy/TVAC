@@ -10,8 +10,10 @@ class Tdk_lambda_Genesys:
 
     def __init__(self):
         self.port = None
-        self.port_listener = TTY_Reader(None)
+        self.port_listener = TTY_Reader(None,name="Tdk_lambda_Genesys_reader")
         self.port_listener.daemon = True
+
+        self.time_since_last_cmd = time.time()
 
     def open_port(self):
         self.port = open('/dev/ttyxuart4', 'r+b', buffering=0)

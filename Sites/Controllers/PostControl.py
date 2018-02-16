@@ -6,6 +6,8 @@ from Logging.Logging import Logging
 
 
 def load_profile(data):
+    if not HardwareStatusInstance.getInstance().pc_104.digital_in.chamber_closed:
+        return "{'Error door is open':'Error: Door is open'}"
     profile_instance = ProfileInstance.getInstance()
     return profile_instance.zoneProfiles.load_profile(data["profile_name"])
 
@@ -56,18 +58,23 @@ def send_hw_cmd(data):
 
 
 def set_pc_104_digital(data):
-    pins = HardwareStatusInstance.getInstance().pc_104
-    Logging.debugPrint(3,"POST: setPC104_Digital '%s'" % data)
-    pins.digital_out.update(data)
-    Logging.debugPrint(4,"Digital out data: '%s'" % pins.digital_out.getJson())
-    return "{'result':'success'}"
+    if HardwareStatusInstance.getInstance().pc_104.digital_in.chamber_closed:
+        pins = HardwareStatusInstance.getInstance().pc_104
+        Logging.debugPrint(3,"POST: setPC104_Digital '%s'" % data)
+        pins.digital_out.update(data)
+        Logging.debugPrint(4,"Digital out data: '%s'" % pins.digital_out.getJson())
+        return "{'result':'success'}"
+    else:
+        return "{'result':'error'}"
 
 
 def set_pc_104_analog(data):
-    pins = HardwareStatusInstance.getInstance().pc_104
-    pins.analog_out.update(data)
-    return "{'result':'success'}"
-
+    if HardwareStatusInstance.getInstance().pc_104.digital_in.chamber_closed:
+        pins = HardwareStatusInstance.getInstance().pc_104
+        pins.analog_out.update(data)
+        return "{'result':'success'}"
+    else:
+        return "{'result':'error'}"
 
 def heat_up_shroud(data):
     duty_cycle = float(data['dutyCycle'])

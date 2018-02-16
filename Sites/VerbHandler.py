@@ -11,6 +11,9 @@ from ThreadControls.ThreadCollectionInstance import ThreadCollectionInstance
 from Logging.Logging import Logging
 
 class VerbHandler(http.server.BaseHTTPRequestHandler):
+    
+    def log_message(self, format, *args):
+        return
 
     def do_GET(self):
         """Respond to a GET request."""
@@ -59,6 +62,7 @@ class VerbHandler(http.server.BaseHTTPRequestHandler):
                 '/recordData': GetControl.record_data,
                 '/chamberDoorStatus':GetControl.chamber_door_status,
                 "/getInterlockStatus":GetControl.get_interlock_status,
+                "/getSqlData":GetControl.get_sql_data,
                 }[path]()
 
             Logging.logEvent("Debug","Status Update",

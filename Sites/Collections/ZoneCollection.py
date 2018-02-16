@@ -111,6 +111,7 @@ class ZoneCollection:
         If this is a pre exisiting profile we are loading after reboot, a startTime will be given
         this is the startTime of the profileInstance that was/will be ran by the ThreadCollection
         '''
+        # self.zoneDict = self.buildCollection()
         if thermalStartTime:
             Logging.debugPrint(2,"Loading profile {}:\tpst: {}\ttst: {}\tfsst: {}".format(profileName,
                                 profileStartTime, time.mktime(thermalStartTime.timetuple()), firstSoakStartTime))
@@ -140,7 +141,8 @@ class ZoneCollection:
             self.firstSoakStartTime = firstSoakStartTime
 
             Logging.debugPrint(2,"Loaded profile: {}".format(profileName))
-
+            # flush all old data, to fill it with new data
+            
             for result in results:
                 zoneProfile = {}
                 zoneName = "zone"+str(result['zone'])
@@ -188,14 +190,15 @@ class ZoneCollection:
         coloums = "( profile_name, zone, average, max_heat_error, min_heat_error, max_heat_per_min )"
         values = "( \"{}\",{},\"{}\",{},{},{} )".format(name,zone,average, heatError, minTemp, maxSlope)
         sql = "INSERT INTO tvac.Thermal_Zone_Profile {} VALUES {};".format(coloums, values)
-        mysql = MySQlConnect()
-        try:
-            mysql.cur.execute(sql)
-            mysql.conn.commit()
-        except Exception as e:
-            Logging.debugPrint(3,"sql: {}".format(sql))
-            Logging.debugPrint(1, "Error in saveZone, zoneCollection: {}".format(str(e)))
-            raise e
+        HardwareStatusInstance.getInstance().sql_list.append(sql)
+        # mysql = MySQlConnect()
+        # try:
+        #     mysql.cur.execute(sql)
+        #     mysql.conn.commit()
+        # except Exception as e:
+        #     Logging.debugPrint(3,"sql: {}".format(sql))
+        #     Logging.debugPrint(1, "Error in saveZone, zoneCollection: {}".format(str(e)))
+        #     raise e
 
         coloums = "( profile_name, zone, set_point, temp_goal, ramp_time, soak_time )"
         values = ""
@@ -207,13 +210,14 @@ class ZoneCollection:
 
             values += "( \"{}\", {}, {}, {}, {}, {} ),\n".format(name, zone, setpoint, tempgoal, rampTime, soakTime)
         sql = "INSERT INTO tvac.Thermal_Profile {} VALUES {};".format(coloums, values[:-2])
-        try:
-            mysql.cur.execute(sql)
-            mysql.conn.commit()
-        except Exception as e:
-            Logging.debugPrint(3,"sql: {}".format(sql))
-            Logging.debugPrint(1, "Error in saveZone, zoneCollection: {}".format(str(e)))
-            raise e
+        HardwareStatusInstance.getInstance().sql_list.append(sql)
+        # try:
+        #     mysql.cur.execute(sql)
+        #     mysql.conn.commit()
+        # except Exception as e:
+        #     Logging.debugPrint(3,"sql: {}".format(sql))
+        #     Logging.debugPrint(1, "Error in saveZone, zoneCollection: {}".format(str(e)))
+        #     raise e
 
         # Saving the TC as well 
         coloums = "( profile_name, zone, thermocouple )"
@@ -221,13 +225,14 @@ class ZoneCollection:
         for tc in zoneProfile["thermocouples"]:
             values += "( \"{}\", {}, {} ),\n".format(name, zone, tc)
         sql = "INSERT INTO tvac.TC_Profile {} VALUES {};".format(coloums, values[:-2])
-        try:
-            mysql.cur.execute(sql)
-            mysql.conn.commit()
-        except Exception as e:
-            Logging.debugPrint(3,"sql: {}".format(sql))
-            Logging.debugPrint(1, "Error in saveZone, zoneCollection: {}".format(str(e)))
-            raise e
+        HardwareStatusInstance.getInstance().sql_list.append(sql)
+        # try:
+        #     mysql.cur.execute(sql)
+        #     mysql.conn.commit()
+        # except Exception as e:
+        #     Logging.debugPrint(3,"sql: {}".format(sql))
+        #     Logging.debugPrint(1, "Error in saveZone, zoneCollection: {}".format(str(e)))
+        #     raise e
 
 
         return True
@@ -288,7 +293,24 @@ class ZoneCollection:
                 tmpStr += "{}_Temp = {},".format(zone, currentTemp)
 
         tmpStr = tmpStr[:-1]
+
+        while True:
+            sql = "SELECT * FROM tvac.Profile_Instance WHERE endTime IS NULL;"
+            try:
+                mysql = MySQlConnect()
+                mysql.cur.execute(sql)
+                mysql.conn.commit()
+            except Exception as e:
+                return (False, e)
+
+            result = mysql.cur.fetchone()
+            print(result)
+            if result:
+                break
+            print("Waiting on SQL to insert profile")
+
         sql = "UPDATE tvac.Profile_Instance set thermal_Start_Time=\"{}\",{} where thermal_Start_Time is null;".format(datetime.datetime.fromtimestamp(thermal_start_time), tmpStr)
+        # HardwareStatusInstance.getInstance().sql_list.append(sql)
         print(sql)
         mysql = MySQlConnect()
         try:
