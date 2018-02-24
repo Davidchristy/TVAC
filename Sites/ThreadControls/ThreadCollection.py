@@ -10,6 +10,7 @@ from ThreadControls.controlStubs.DutyCycleControlStub import DutyCycleControlStu
 from ThreadControls.controlStubs.LN2ControlStub import LN2ControlStub
 from ThreadControls.controlStubs.VacuumControlStub import VacuumControlStub
 from ThreadControls.updaters.PfeifferGaugeUpdater import PfeifferGaugeUpdater
+from ThreadControls.updaters.hardwareUpdater import HardwareUpdater
 from ThreadControls.updaters.ShiMccUpdater import ShiMccUpdater
 from ThreadControls.updaters.ShiCompressorUpdater import ShiCompressorUpdater
 from ThreadControls.updaters.ThermoCoupleUpdater import ThermoCoupleUpdater
@@ -66,11 +67,12 @@ class ThreadCollection:
         # sending parent for testing, getting current profile data to zone instance
         return {
             1: TsRegistersUpdater(parent=parent),
-            2: ThermoCoupleUpdater(parent=parent),
+            2: HardwareUpdater(parent=parent),
+            # 2: ThermoCoupleUpdater(parent=parent),
             3: PfeifferGaugeUpdater(),
-            4: ShiMccUpdater(parent=parent),
-            5: ShiCompressorUpdater(parent=parent),
-            6: TdkLambdaUpdater(parent=parent),
+            # 4: ShiMccUpdater(parent=parent),
+            # 5: ShiCompressorUpdater(parent=parent),
+            # 6: TdkLambdaUpdater(parent=parent),
             7: LN2ControlStub(ThreadCollection=parent),
             8: VacuumControlStub(),
             }
@@ -130,19 +132,6 @@ class ThreadCollection:
             # If there is an error connecting to the DB, return it
             if result != True:
                 return result
-
-        # starts all the HWcontrol threads
-        try:
-            for thread in self.zoneThreadDict:
-                if self.zoneThreadDict[thread].zoneProfile.zone > 0:
-                    self.zoneThreadDict[thread].running = True
-                    self.zoneThreadDict[thread].daemon = True
-                    self.zoneThreadDict[thread].start()
-                    Logging.logEvent("Debug","Status Update", 
-                    {"message": "Zone {} is handled, about the start".format(self.zoneThreadDict[thread].zoneProfile.zone),
-                     "level":1})
-        except Exception as e:
-            print(e)
 
         ProfileInstance.getInstance().activeProfile = True
         Logging.debugPrint(2,"Setting Active Profile to True")

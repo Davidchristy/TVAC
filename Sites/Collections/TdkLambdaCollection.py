@@ -57,7 +57,7 @@ class TdkLambdaCollection:
     def get_val(self, addr, name):
         return self.getPS(addr).get_val(name)
 
-    def update(self, psList):
+    def update_tdk_lambda(self, psList):
         self.__lock.acquire()
         self.time = datetime.now()
         self.__lock.release()

@@ -15,9 +15,9 @@ from Logging.Logging import Logging
 
 
 class ShiCompressorUpdater(Thread):
-    def __init__(self, parent=None, group=None, target=None, name=None,
-                 args=(), kwargs=None, verbose=None):
-        Thread.__init__(self, group=group, target=target, name="ShiCompressorUpdater")
+    def __init__(self, parent=None, target=None, name=None,
+                 args=(), kwargs=None):
+        Thread.__init__(self, target=target, name="ShiCompressorUpdater")
         self.args = args
         self.kwargs = kwargs
         self.parent = parent
@@ -141,24 +141,24 @@ class ShiCompressorUpdater(Thread):
                 time.sleep(4)
 
 
-if __name__ == '__main__':
-    # adding debug info
-    if(len(sys.argv)>1):
-        for arg in sys.argv:
-            if arg.startswith("-v"):
-                Logging.verbose = arg.count("v")
-    Logging.logEvent("Debug","Status Update",
-        {"message": "Debug on: Level {}".format(Logging.verbose),
-         "level":1})
-
-    hw_status = HardwareStatusInstance.getInstance()
-    hw_status.pc_104.digital_out.update({'CryoP Pwr Relay 1': True})
-
-    thread = ShiCompressorUpdater()
-    thread.daemon = True
-    thread.start()
-
-    while True:
-        time.sleep(5)
-        print(hw_status.shi_cryopump.getJson())
-
+# if __name__ == '__main__':
+#     # adding debug info
+#     if(len(sys.argv)>1):
+#         for arg in sys.argv:
+#             if arg.startswith("-v"):
+#                 Logging.verbose = arg.count("v")
+#     Logging.logEvent("Debug","Status Update",
+#         {"message": "Debug on: Level {}".format(Logging.verbose),
+#          "level":1})
+#
+#     hw_status = HardwareStatusInstance.getInstance()
+#     hw_status.pc_104.digital_out.update({'CryoP Pwr Relay 1': True})
+#
+#     thread = ShiCompressorUpdater()
+#     thread.daemon = True
+#     thread.start()
+#
+#     while True:
+#         time.sleep(5)
+#         print(hw_status.shi_cryopump.getJson())
+#

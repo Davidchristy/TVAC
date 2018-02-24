@@ -308,47 +308,56 @@ class SafetyCheck(Thread):
                     if HardwareStatusInstance.getInstance().operational_vacuum:
                         vacuum = True
 
-                    if os.name == "posix":
-                        userName = os.environ['LOGNAME']
-                    else:
-                        userName = "user"
-                    if "root" in userName:
-                        if vacuum and HardwareStatusInstance.getInstance().pfeiffer_gauges.get_chamber_pressure() > 1e-4:
-                            d_out = HardwareStatusInstance.getInstance().pc_104.digital_out
-                            ProfileInstance.getInstance().activeProfile = False
-                            Logging.debugPrint(1, "ERROR Pressure is above 10^-4. ({})".format(
-                                HardwareStatusInstance.getInstance().pfeiffer_gauges.get_chamber_pressure()))
-                            vacuum = False
-                            # TODO: Send Error
-                            d_out.update({"IR Lamp 1 PWM DC": 0})
-                            d_out.update({"IR Lamp 2 PWM DC": 0})
-                            d_out.update({"IR Lamp 3 PWM DC": 0})
-                            d_out.update({"IR Lamp 4 PWM DC": 0})
-                            d_out.update({"IR Lamp 5 PWM DC": 0})
-                            d_out.update({"IR Lamp 6 PWM DC": 0})
-                            d_out.update({"IR Lamp 7 PWM DC": 0})
-                            d_out.update({"IR Lamp 8 PWM DC": 0})
-                            d_out.update({"IR Lamp 9 PWM DC": 0})
-                            d_out.update({"IR Lamp 10 PWM DC": 0})
-                            d_out.update({"IR Lamp 11 PWM DC": 0})
-                            d_out.update({"IR Lamp 12 PWM DC": 0})
-                            d_out.update({"IR Lamp 13 PWM DC": 0})
-                            d_out.update({"IR Lamp 14 PWM DC": 0})
-                            d_out.update({"IR Lamp 15 PWM DC": 0})
-                            d_out.update({"IR Lamp 16 PWM DC": 0})
+                    if vacuum and \
+                            HardwareStatusInstance.getInstance().pfeiffer_gauges.get_chamber_pressure() > 1e-4\
+                            and ProfileInstance.getInstance().activeProfile:
 
-                            HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Shroud Duty Cycle', 0])
-                            HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Platen Duty Cycle', 0])
+                        errorDetail = "Chamber Pressure is above Operational Vacuum ({})".format(
+                            HardwareStatusInstance.getInstance().pfeiffer_gauges.get_chamber_pressure())
+                        error = {
+                            "time": str(datetime.now()),
+                            "event": "Raised Pressure While Testing",
+                            "item": "Pressure",
+                            "itemID": 0,
+                            "details": errorDetail,
+                            "actions": ["Log Event"]
+                        }
+                        self.logEvent(error)
+                        tempErrorDict[error['event']] = True
 
-                            release_hold_thread()
+                        d_out = HardwareStatusInstance.getInstance().pc_104.digital_out
+                        ProfileInstance.getInstance().activeProfile = False
+                        Logging.debugPrint(1, "ERROR Pressure is above 10^-4. ({})".format(
+                            HardwareStatusInstance.getInstance().pfeiffer_gauges.get_chamber_pressure()))
+                        vacuum = False
+                        # TODO: Send Error
+                        d_out.update({"IR Lamp 1 PWM DC": 0})
+                        d_out.update({"IR Lamp 2 PWM DC": 0})
+                        d_out.update({"IR Lamp 3 PWM DC": 0})
+                        d_out.update({"IR Lamp 4 PWM DC": 0})
+                        d_out.update({"IR Lamp 5 PWM DC": 0})
+                        d_out.update({"IR Lamp 6 PWM DC": 0})
+                        d_out.update({"IR Lamp 7 PWM DC": 0})
+                        d_out.update({"IR Lamp 8 PWM DC": 0})
+                        d_out.update({"IR Lamp 9 PWM DC": 0})
+                        d_out.update({"IR Lamp 10 PWM DC": 0})
+                        d_out.update({"IR Lamp 11 PWM DC": 0})
+                        d_out.update({"IR Lamp 12 PWM DC": 0})
+                        d_out.update({"IR Lamp 13 PWM DC": 0})
+                        d_out.update({"IR Lamp 14 PWM DC": 0})
+                        d_out.update({"IR Lamp 15 PWM DC": 0})
+                        d_out.update({"IR Lamp 16 PWM DC": 0})
 
-                        # end if vacuum in bad condintion
-                    # end if root
+                        HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Shroud Duty Cycle', 0])
+                        HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Platen Duty Cycle', 0])
+
+                        release_hold_thread()
+
+                    # end if vacuum in bad condintion
                     time.sleep(self.SLEEP_TIME)
             # end of inner while true loop
             except Exception as e:
                 Logging.debugPrint(1, "Error in Safety Checker: {}".format(str(e)))
-                raise e
                 if Logging.debug:
                     raise e
                 time.sleep(self.SLEEP_TIME)

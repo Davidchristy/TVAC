@@ -4,6 +4,7 @@ import time
 import sys
 from telnetlib import Telnet
 from datetime import datetime
+import os
 
 # from DataContracts.HardwareStatusInstance import HardwareStatusInstance
 
@@ -17,9 +18,18 @@ from datetime import datetime
 
 class Keysight_34980A_TCs(Telnet):
 
-    def __init__(self, host='192.168.99.3', port=5024, timeout=10,
+    def __init__(self, port=5024, timeout=10,
                 ChannelList = "(@1001:1040,2001:2040,3001:3040)"):
         Telnet.__init__(self)
+        if os.name == "posix":
+            user_name = os.environ['LOGNAME']
+        else:
+            user_name = "user"
+
+        if 'root' in user_name:
+            host = '192.168.99.3'
+        else:
+            host = '127.0.0.1'
         self.Ch_List = ChannelList
         self.working_tc_lower_limit= 8
         self.working_tc_upper_limit = 2000

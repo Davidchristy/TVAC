@@ -13,40 +13,7 @@ from Logging.Logging import Logging
 
 
 
-def log_live_temperature_data(data):
-    '''
-    data = {
-        "time":		TCs['time'],
-        "tcList":	TCs['tcList'],
-        "ProfileUUID": ProfileUUID,
-    }
-    TCs is a list of dicitations ordered like this....
-    {
-    'Thermocouple': tc_num,
-    'time': tc_time_offset,
-    'temp': tc_tempK,
-    'working': tc_working,
-    'alarm': tc_alarm
-    }
-    '''
 
-    time = data["time"]
-    profile = data["profileUUID"]
-    coloums = "( profile_I_ID, time, thermocouple, temperature )"
-    values = ""
-
-    for tc in data['tcList']:
-        thermocouple = tc["Thermocouple"]
-        temperature = tc["temp"]
-        if math.isnan(tc["temp"]):
-            continue
-        values += "( \"{}\", \"{}\", {}, {} ),\n".format(profile, time.strftime('%Y-%m-%d %H:%M:%S'), thermocouple,
-                                                         temperature)
-    sql = "INSERT INTO tvac.Real_Temperature {} VALUES {};".format(coloums, values[:-2])
-
-    sql.replace("nan", "NULL")
-
-    HardwareStatusInstance.getInstance().sql_list.append(sql)
 
 class ThermoCoupleUpdater(Thread):
     """
@@ -213,4 +180,4 @@ class ThermoCoupleUpdater(Thread):
         else:
             tharsis = None
         return hw_status, tharsis, user_name
-    # end of run()
+

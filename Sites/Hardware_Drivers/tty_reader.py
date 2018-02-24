@@ -22,10 +22,10 @@ class TTY_Reader(Thread):
         '''
         '''
         while not self.tty_fd.closed:
-            self.last_time_run = time.time()
-            time_before_read = time.time()
+            # self.last_time_run = time.time()
+            # time_before_read = time.time()
             buff = self.tty_fd.read(1).decode()
-            read_time = time.time() - time_before_read
+            # read_time = time.time() - time_before_read
             #print(read_time)
             #if read_time > 1:
             #    print("{} read time: {}".format(self.name,read_time))

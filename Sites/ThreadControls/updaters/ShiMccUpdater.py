@@ -48,7 +48,7 @@ class ShiMccUpdater(Thread):
                 Logging.logEvent("Debug", "Status Update",
                                 {"message": "Starting Shi Mcc Control Stub Thread",
                                 "level": 2})
-                # print("Starting MCC")
+
 
                 if "root" in userName:
                     # Live systems go here
