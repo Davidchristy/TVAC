@@ -25,23 +25,43 @@ def process_system_cmds(data):
         if "DATE" in data.upper():
             return ""
 
+def read_temps(data):
+    start_time = time.time()
+    unit = "K"
+    alarm = "0"
+    bank = data.split()[1][2]
+
+    tc_file = open("./hw-files/TC_bank_{}.txt".format(bank),"r")
+    tc_str = ""
+    for i, tc in enumerate(tc_file):
+        time_offset = time.time()-start_time
+        channel = "{}{:03}".format(bank,i+1)
+        tc_str += "{} {},{},{},{},".format(tc.strip(), unit, round(time_offset,3), channel,alarm)
+
+    tc_str = tc_str[:-1]
+
+    return tc_str
+
+
 def process_keysight_cmd(data):
-    sub_systems = {"SYST": process_system_cmds,
-                   }
+    sub_systems = {"SYST": process_system_cmds}
     sub_system = data.split(":")[0]
     temp_func = sub_systems.get(sub_system, None)
     if not temp_func:
         if "*IDN?" in data:
             return "Agilent Technologies,34980A,MY12345678,1.00-1.00-2.00-1.00"
+        if "READ?" in data:
+            return read_temps(data)
         return ""
+
 
     return sub_systems[sub_system](data)
 
 class Keysight(Thread):
 
-    def __init__(self):
+    def __init__(self, time_delay=0):
         Thread.__init__(self, name="keysight")
-
+        self.time_delay = time_delay
 
 
     def run(self):
@@ -191,15 +211,12 @@ class Keysight(Thread):
                     reply = process_keysight_cmd(data)
                     if not reply:
                         reply = ""
-                    final_reply = reply + prompt
-                    # print("Reply: '{}'".format(final_reply))
-
-                    c.send(final_reply.encode())
-
                     # if "READ?" in data:
-                    #     send_temps(data)
-
-                    time.sleep(.1)
+                    #     final_reply = reply + "lol"
+                    # else:
+                    final_reply = reply + prompt
+                    time.sleep(self.time_delay)
+                    c.send(final_reply.encode())
             except Exception as e:
                 print(e)
                 sleep_time += 1

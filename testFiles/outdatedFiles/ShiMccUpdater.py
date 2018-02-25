@@ -65,7 +65,7 @@ class ShiMccUpdater(Thread):
                     self.mcc.flush_port()
                     # Now send some initialization commands
                     # The maximum second stage temperature the cryopump may start to restart after a power failure.
-                    val = self.mcc.Get_RegenParam_6()
+                    val = self.mcc.get_regen_param_6()
                     if val['Error']:
                         Logging.logEvent("Debug", "Status Update",
                                          {"message": 'Shi MCC GetRegenParam_6" Error Response: %s' % (val),
@@ -149,7 +149,7 @@ class ShiMccUpdater(Thread):
                                                   "ProfileInstance": ProfileInstance.getInstance()})
                             elif 'Set_RegenParam' == cmd[0]:  # 2.19 • Regeneration Parameters pg:16
                                 self.run_set_cmd(self.mcc.Set_RegenParam, cmd)
-                                val = self.mcc.Get_RegenParam(cmd[1])
+                                val = self.mcc.get_regen_param(cmd[1])
                                 if val['Error']:
                                     Logging.logEvent("Debug", "Status Update",
                                          {"message": 'Shi MCC GetRegenParam_%s" Error Response: %s' % (cmd[1], val),
@@ -158,7 +158,7 @@ class ShiMccUpdater(Thread):
                                     self.hw.shi_cryopump.update({'MCC Params': {"Regen Param_%s" % cmd[1]: val['Data']}})
                             elif 'RegenStartDelay' == cmd[0]:  # 2.21 • Regeneration Start Delay pg.18
                                 self.run_set_cmd(self.mcc.Set_RegenStartDelay, cmd)
-                                self.run_get_cmd(self.mcc.Get_RegenStartDelay, "Regen Start Delay")
+                                self.run_get_cmd(self.mcc.get_regen_start_delay, "Regen Start Delay")
                             elif 'Open_RoughingValve' == cmd[0]:  # 2.24 • Rough On/Off/Query pg:19
                                 self.run_set_cmd(self.mcc.Open_RoughingValve, cmd)
                             elif 'Close_RoughingValve' == cmd[0]:  # 2.24 • Rough On/Off/Query pg:19
@@ -167,7 +167,7 @@ class ShiMccUpdater(Thread):
                                 self.run_set_cmd(self.mcc.Clear_RoughingInterlock, cmd)
                             elif 'SecondStageTempCTL' == cmd[0]:  # 2.27 • Second Stage Temperature Control pg:21
                                 self.run_set_cmd(self.mcc.Set_SecondStageTempCTL, cmd)
-                                self.run_get_cmd(self.mcc.Get_SecondStageTempCTL,
+                                self.run_get_cmd(self.mcc.get_second_stage_temp_ctl,
                                                  "Second Stage Temp CTL")
                             elif 'Turn_TcPressureOn' == cmd[0]:  # 2.29 • TC On/Off/Query pg:22
                                 self.run_set_cmd(self.mcc.Turn_TcPressureOn, cmd)

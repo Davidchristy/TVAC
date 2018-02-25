@@ -1,4 +1,3 @@
-import time
 import datetime
 import time
 
@@ -11,10 +10,6 @@ from ThreadControls.controlStubs.LN2ControlStub import LN2ControlStub
 from ThreadControls.controlStubs.VacuumControlStub import VacuumControlStub
 from ThreadControls.updaters.PfeifferGaugeUpdater import PfeifferGaugeUpdater
 from ThreadControls.updaters.hardwareUpdater import HardwareUpdater
-from ThreadControls.updaters.ShiMccUpdater import ShiMccUpdater
-from ThreadControls.updaters.ShiCompressorUpdater import ShiCompressorUpdater
-from ThreadControls.updaters.ThermoCoupleUpdater import ThermoCoupleUpdater
-from ThreadControls.updaters.TdkLambdaUpdater import TdkLambdaUpdater
 from ThreadControls.updaters.TsRegistersUpdater import TsRegistersUpdater
 from Collections.HardwareStatusInstance import HardwareStatusInstance
 
@@ -22,7 +17,6 @@ from Collections.HardwareStatusInstance import HardwareStatusInstance
 class ThreadCollection:
 
     def __init__(self):
-        # self.zoneThreadDict = self.createZoneCollection()
         self.dutyCycleThread = DutyCycleControlStub(parent=self)
         self.hardwareInterfaceThreadDict = self.createHardwareInterfaces(parent=self)
         self.safetyThread = SafetyCheck(parent=self)
@@ -68,13 +62,9 @@ class ThreadCollection:
         return {
             1: TsRegistersUpdater(parent=parent),
             2: HardwareUpdater(parent=parent),
-            # 2: ThermoCoupleUpdater(parent=parent),
             3: PfeifferGaugeUpdater(),
-            # 4: ShiMccUpdater(parent=parent),
-            # 5: ShiCompressorUpdater(parent=parent),
-            # 6: TdkLambdaUpdater(parent=parent),
-            7: LN2ControlStub(ThreadCollection=parent),
-            8: VacuumControlStub(),
+            4: LN2ControlStub(ThreadCollection=parent),
+            5: VacuumControlStub(),
             }
 
 

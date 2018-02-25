@@ -5,11 +5,10 @@ from threading import Condition
 
 
 class TTY_Reader(Thread):
-
-
+    __lock = Condition()
     def __init__(self, fd, group=None, target=None, name=None, args=(), kwargs=None):
         Thread.__init__(self, group=group, target=target, name=name)
-        self.__lock = Condition()
+
         self.args = args
         self.kwargs = kwargs
         self.tty_fd = fd
@@ -19,24 +18,18 @@ class TTY_Reader(Thread):
         self.tty_fd = fd
 
     def run(self):
-        '''
-        '''
+        """
+
+        :return:
+        """
         while not self.tty_fd.closed:
-            # self.last_time_run = time.time()
-            # time_before_read = time.time()
             buff = self.tty_fd.read(1).decode()
-            # read_time = time.time() - time_before_read
-            #print(read_time)
-            #if read_time > 1:
-            #    print("{} read time: {}".format(self.name,read_time))
-            # print("Gap Between runs: {}".format(self.last_time_run-time.time()))
-            # print("Data Read: '{}'".format(buff))
             with self.__lock:
                 self.buffer[0] += buff
                 if buff == "\r" or len(self.buffer[0]) >= 128:
                     self.buffer.insert(0, "")
                     self.__lock.notify()
-                    time.sleep(.1)
+
 
 
     def flush_buffer(self, delay_for_read=0.0):

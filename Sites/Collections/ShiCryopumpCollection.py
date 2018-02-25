@@ -24,7 +24,7 @@ class ShiCryopumpCollection:
         self.compressor = Shi_Compressor_Contract()
         self.time = datetime.now()
 
-    def update(self, d):
+    def update_shi_cryopump(self, d):
         self.__lock.acquire()
         self.time = datetime.now()
         self.__lock.release()
