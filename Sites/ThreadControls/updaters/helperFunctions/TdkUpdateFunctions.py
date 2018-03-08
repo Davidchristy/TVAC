@@ -1,9 +1,11 @@
-import time
 from Collections.HardwareStatusInstance import HardwareStatusInstance
 from Logging.Logging import Logging
+from Collections.ProfileInstance import ProfileInstance
+from ThreadControls.SafetyCheckHelperFunctions import log_hw_error
 
 def initialize_tdk_lambdas(tdk_lambda):
     hw = HardwareStatusInstance.getInstance()
+    pi = ProfileInstance.getInstance()
     # Thread "Start up" stuff goes here
     Logging.logEvent("Debug", "Status Update",
                      {"message": "TDK Lambda Genesys Control Stub Thread",
@@ -26,10 +28,14 @@ def initialize_tdk_lambdas(tdk_lambda):
             ps.update(tdk_lambda.get_ast())
             ps.update(tdk_lambda.get_mode())
     except RuntimeError as e:
-        print("ERROR: TDK: There has been an error with the TDK Lambda's ({})".format(e))
+        item = "TDK Lambda"
+        error_details = "ERROR: {}: There has been an error with the {} ({})".format(item, item, e)
+        log_hw_error(pi=pi, item=item, error_details=error_details)
     except TimeoutError as e:
-        print("ERROR: TDK: There has been a Timeout error with the TDK Lambda's ({})".format(e))
-        HardwareStatusInstance.getInstance().tdk_lambda_power = False
+        HardwareStatusInstance.getInstance().tdk_lambda_power  = False
+        item = "TDK Lambda"
+        error_details = "ERROR: {}: There has been a Timeout error with the {} ({})".format(item, item, e)
+        log_hw_error(pi=pi, item=item, error_details=error_details)
     else:
         HardwareStatusInstance.getInstance().tdk_lambda_power = True
     hw.tdk_lambda_ps.update_tdk_lambda(update_power_supplies)
@@ -38,17 +44,11 @@ def initialize_tdk_lambdas(tdk_lambda):
 
 def tdk_lambda_update(tdk_lambda):
     hw = HardwareStatusInstance.getInstance()
+    pi = ProfileInstance.getInstance()
     if hw.operational_vacuum:
         try:
             # This is here to clear any old data that might be in the port, waiting for .2 seconds to allow for HW to reply
             tdk_lambda.flush_port(.2)
-
-            # TODO: Put this in the safety checker
-            # if not hw.operational_vacuum:
-            #     for tdk in update_tdk_lambdas:
-            #         tdk_lambda.set_addr(tdk['addr'])
-            #         tdk_lambda.set_out_off()
-            #     return
 
             # Loop through all the potential commands to do.
             while hw.tdk_lambda_cmds:
@@ -56,12 +56,16 @@ def tdk_lambda_update(tdk_lambda):
                 process_tkd_lambda_command(cmd, tdk_lambda=tdk_lambda)
 
         except RuntimeError as e:
-            print("ERROR: TDK: There has been an error with the TDK Lambda's ({})".format(e))
+            item = "TDK Lambda"
+            error_details = "ERROR: {}: There has been an error with the {} ({})".format(item, item, e)
+            log_hw_error(pi=pi, item=item, error_details=error_details)
         except TimeoutError as e:
-            print("ERROR: TDK: There has been a Timeout error with the TDK Lambda's ({})".format(e))
-            HardwareStatusInstance.getInstance().tdk_lambda_power = False
+            hw.tdk_lambda_power = False
+            item = "TDK Lambda"
+            error_details = "ERROR: {}: There has been a Timeout error with the {} ({})".format(item, item, e)
+            log_hw_error(pi=pi, item=item, error_details=error_details)
         else:
-            HardwareStatusInstance.getInstance().tdk_lambda_power = True
+            hw.tdk_lambda_power = True
 
 
 def process_tkd_lambda_command(cmd, tdk_lambda):
@@ -139,8 +143,8 @@ def process_tkd_lambda_command(cmd, tdk_lambda):
         enable = False
     if "Duty Cycle" in cmd[0]:
         duty_cycle_raw = float(cmd[1])
-        duty_cycle_max_capped = min(1, duty_cycle_raw)
-        duty_cycle = max(0, duty_cycle_max_capped)
+        duty_cycle_max_capped = min(1.0, duty_cycle_raw)
+        duty_cycle = max(0.0, duty_cycle_max_capped)
 
         current = duty_cycle * current_scale
         voltage = current * 80.0

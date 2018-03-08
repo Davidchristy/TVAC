@@ -1,7 +1,8 @@
 import time
 from Collections.HardwareStatusInstance import HardwareStatusInstance
 from Logging.Logging import Logging
-
+from ThreadControls.SafetyCheckHelperFunctions import log_hw_error
+from Collections.ProfileInstance import ProfileInstance
 def run_get_cmd(fun, key):
     hw = HardwareStatusInstance.getInstance()
     val = fun()
@@ -93,6 +94,7 @@ def initialize_shi_mcc(mcc):
     refer to "Marathon Cryopump Controller Programmer's Reference Guide" in the Documentation.
     :return:
     """
+    pi = ProfileInstance.getInstance()
     hw = HardwareStatusInstance.getInstance()
     try:
 
@@ -133,12 +135,16 @@ def initialize_shi_mcc(mcc):
             run_set_mcc_cmd(mcc.set_regen_param, [' ', 2])
 
     except RuntimeError as e:
-        print("ERROR: MCC: There has been an error with the Shi MCC ({})".format(e))
+        item = "Shi MCC"
+        error_details = "ERROR: {}: There has been an error with the {} ({})".format(item, item, e)
+        log_hw_error(pi=pi, item=item, error_details=error_details)
     except TimeoutError as e:
-        print("ERROR: MCC: There has been a Timeout error with the MCC ({})".format(e))
-        HardwareStatusInstance.getInstance().tdk_lambda_power = False
+        HardwareStatusInstance.getInstance().shi_mcc_power = False
+        item = "Shi MCC"
+        error_details = "ERROR: {}: There has been a Timeout error with the {} ({})".format(item, item, e)
+        log_hw_error(pi=pi, item=item, error_details=error_details)
     else:
-        HardwareStatusInstance.getInstance().tdk_lambda_power = True
+        HardwareStatusInstance.getInstance().shi_mcc_power = True
     # This is next time the code should read mcc parameters...
     # It gets initialized to current time so they are read ASAP
     next_param_read_time = time.time()
@@ -148,6 +154,7 @@ def initialize_shi_mcc(mcc):
 
 def shi_mcc_update(mcc, next_param_read_time, mcc_param_period, mcc_status_read_time, mcc_status_period):
     hw = HardwareStatusInstance.getInstance()
+    pi = ProfileInstance.getInstance()
     Logging.logEvent("Debug", "Status Update",
                      {"message": "Reading and writing with ShiMccUpdater.",
                       "level": 4})
@@ -176,12 +183,15 @@ def shi_mcc_update(mcc, next_param_read_time, mcc_param_period, mcc_status_read_
             process_mcc_cmd(cmd, mcc)
 
     except RuntimeError as e:
-        # TODO: This needs to log to something...anything really
-        print("ERROR: MCC: There has been an error with the Shi MCC ({})".format(e))
+        item = "Shi MCC"
+        error_details = "ERROR: {}: There has been an error with the {} ({})".format(item, item, e)
+        log_hw_error(pi=pi, item=item, error_details=error_details)
     except TimeoutError as e:
-        print("ERROR: MCC: There has been a Timeout error with the MCC ({})".format(e))
-        HardwareStatusInstance.getInstance().tdk_lambda_power = False
+        hw.shi_mcc_power = False
+        item = "Shi MCC"
+        error_details = "ERROR: {}: There has been a Timeout error with the {} ({})".format(item, item, e)
+        log_hw_error(pi=pi, item=item, error_details=error_details)
     else:
-        HardwareStatusInstance.getInstance().tdk_lambda_power = True
+        hw.shi_mcc_power = True
 
     return next_param_read_time, mcc_status_read_time

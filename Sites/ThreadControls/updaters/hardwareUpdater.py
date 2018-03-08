@@ -1,3 +1,4 @@
+import datetime
 from threading import Thread
 
 from Hardware_Drivers.Shi_Compressor import ShiCompressor
@@ -10,6 +11,7 @@ from ThreadControls.updaters.helperFunctions.TcUpdateFunctions import *
 from ThreadControls.updaters.helperFunctions.TdkUpdateFunctions import *
 from ThreadControls.updaters.helperFunctions.CompUpdateFunctions import *
 
+from ThreadControls.SafetyCheckHelperFunctions import enter_safe_mode, log_event
 
 class HardwareUpdater(Thread):
     def __init__(self, parent=None):
@@ -37,6 +39,7 @@ class HardwareUpdater(Thread):
             raise e
 
     def run(self):
+        pi = ProfileInstance.getInstance()
         # While true to restart the thread if it errors out
         while True:
             # Catch anything that goes wrong
@@ -86,6 +89,19 @@ class HardwareUpdater(Thread):
             # end of try
             except Exception as e:
                 # Safe the system here
-                print("Notify the user, there has been a problem we can't catch")
+                error_details = "Unknown Hardware Error: ({})".format(e)
+                error_log = {
+                    "time": str(datetime.datetime.now()),
+                    "event": "Duty Cycle Error",
+                    "item": "Unknown",
+                    "itemID": 0,
+                    "details": error_details,
+                    "actions": ["Log Event"]
+                }
+                enter_safe_mode(error_details)
+                log_event(error_log, pi.error_list)
+                pi.active_profile = False
+            # Sleep for a second if it fails
+            time.sleep(1)
         #end while True
     # End run()

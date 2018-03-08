@@ -1,8 +1,3 @@
-'''
-NOTE: This is still under test:
-
-This is the interface between the hardware and the software. 
-'''
 from DataContracts.DigitalInContract import DigitalInContract
 from DataContracts.DigitalOutContract import DigitalOutContract
 from DataContracts.AnalogInContract import AnalogInContract
@@ -26,7 +21,7 @@ class PC_104_Instance:
         if PC_104_Instance.__instance != None:
             raise Exception("This class is a singleton!")
         else:
-            Logging.logEvent("Debug","Status Update", 
+            Logging.logEvent("Debug","Status Update",
                 {"message": "Creating PC_104_Instance",
                  "level":2})
             self.digital_in = DigitalInContract()

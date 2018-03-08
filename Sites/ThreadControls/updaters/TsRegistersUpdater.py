@@ -39,7 +39,7 @@ class TsRegistersUpdater(Thread):
             # While true to restart the thread if it errors out
             try:
                 # Thread "Start up" stuff goes here
-                Logging.logEvent("Debug","Status Update", 
+                Logging.logEvent("Debug","Status Update",
                 {"message": "Starting TS Registers Control Stub Thread",
                  "level":2,
                  })
@@ -67,7 +67,7 @@ class TsRegistersUpdater(Thread):
                         self.ir_lamp_pwm[i].update_waveform_state(self.da_io.digital_out.get_IR_Lamps_pwm_dc(i + 1))
                     if "root" in userName:
                         
-                        Logging.logEvent("Debug","Status Update", 
+                        Logging.logEvent("Debug","Status Update",
                            {"message": "Reading and writing with PC 104",
                              "level":4})
 
@@ -95,7 +95,7 @@ class TsRegistersUpdater(Thread):
                         # added for testing
                         time.sleep(.1)
                     else:
-                        Logging.logEvent("Debug","Status Update", 
+                        Logging.logEvent("Debug","Status Update",
                            {"message": "Test run of PC 104 loop",
                              "level":5})
                         # Sleeping so it doesn't busy wait on test
@@ -111,13 +111,13 @@ class TsRegistersUpdater(Thread):
                     HardwareStatusInstance.getInstance().pc_104_power = False
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                Logging.logEvent("Error","Hardware Interface Thread", 
+                Logging.logEvent("Error","Hardware Interface Thread",
                         {"type": exc_type,
                          "filename": fname,
                          "line": exc_tb.tb_lineno,
                          "thread": "TsRegistersUpdater"
                         })
-                Logging.logEvent("Debug","Status Update", 
+                Logging.logEvent("Debug","Status Update",
                         {"message": "There was a {} error in TsRegistersUpdater. File: {}:{}\n{}".format(exc_type,fname,exc_tb.tb_lineno,e),
                          "level":2})
                 if Logging.debug:
@@ -141,7 +141,7 @@ class TsRegistersUpdater(Thread):
         if sleep_time > 0:
             time.sleep(sleep_time)
         self.time_test += m
-        Logging.debugPrint(6, "Ts Registers Sleep Time: {:0.6f}s".format(sleep_time))
+        Logging.debug_print(6, "Ts Registers Sleep Time: {:0.6f}s".format(sleep_time))
         print("Ts Registers sleep_time: {:0.6f}s".format(sleep_time))
 
 

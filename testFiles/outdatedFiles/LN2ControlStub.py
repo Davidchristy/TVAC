@@ -42,7 +42,7 @@ class LN2ControlStub(Thread):
             # Check to make sure there is an active profile
             # and that we are sitting in an operational vacuum
             # and that all drivers and updaters are running
-            a_out = self.hardwareStatus.getInstance().pc_104.analog_out  # todo: better variable name?
+            a_out = self.hardwareStatus.getInstance().pc_104.analog_out
             d_out = self.hardwareStatus.getInstance().pc_104.digital_out
             a_out.update({'LN2 Shroud': 0,'LN2 Platen': 0})
             d_out.update({'LN2-S Sol': False, 'LN2-P Sol': False, })
@@ -50,7 +50,7 @@ class LN2ControlStub(Thread):
             if "root" not in user_name:
                 HardwareStatusInstance.getInstance().pc_104.digital_in.chamber_closed = True
 
-            if ProfileInstance.getInstance().activeProfile and \
+            if ProfileInstance.getInstance().active_profile and \
                     HardwareStatusInstance.getInstance().operational_vacuum and \
                     HardwareStatusInstance.getInstance().pc_104.digital_in.chamber_closed:
                 # try and catch anything that might go wrong
@@ -63,7 +63,7 @@ class LN2ControlStub(Thread):
                     time.sleep(self.SLEEP_TIME)
 
                     # Normal program loop
-                    while ProfileInstance.getInstance().activeProfile and HardwareStatusInstance.getInstance().operational_vacuum:
+                    while ProfileInstance.getInstance().active_profile and HardwareStatusInstance.getInstance().operational_vacuum:
                         Logging.debugPrint(3, "LN2: Starting LN2 Control Loop")
                         dutycyclelist = []
                         platenDuty = None
@@ -129,7 +129,7 @@ class LN2ControlStub(Thread):
                 # end of try catch
             else:
                 Logging.debugPrint(3,"LN2: AP: {}, Vacuum: {}, Door {}".format(
-                    ProfileInstance.getInstance().activeProfile,
+                    ProfileInstance.getInstance().active_profile,
                     HardwareStatusInstance.getInstance().operational_vacuum,
                     HardwareStatusInstance.getInstance().pc_104.digital_in.chamber_closed
                 ))

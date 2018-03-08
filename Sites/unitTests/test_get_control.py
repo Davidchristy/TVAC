@@ -103,10 +103,6 @@ class MyTestCase(unittest.TestCase):
         results = GetControl.resume_all_zones()
         # print(results)
 
-    def test_pause_all_zones(self):
-        results = GetControl.pause_all_zones()
-        # print(results)
-
     def test_hold_all_zones(self):
         results = GetControl.hold_all_zones()
         # print(results)

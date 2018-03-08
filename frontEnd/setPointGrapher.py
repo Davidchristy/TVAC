@@ -116,20 +116,20 @@ def main():
 	time_creep = 0
 	newProfile = False
 
-	inHold = False
-	inHoldFlag = False
+	in_hold = False
+	in_holdFlag = False
 	startTime = time.time()
 	while True:
 		# find value for the current time
 		currentTime = time.time() + time_creep 
 		# time_creep += .1
 	 
-		while inHold:
-			if not inHoldFlag:
+		while in_hold:
+			if not in_holdFlag:
 				# first time through hold loop
 				print("in hold for first time")
 				startHoldTime = int(time.time())
-				inHoldFlag = True
+				in_holdFlag = True
 			pass
 
 			currentTime = time.time() + time_creep 
@@ -137,16 +137,16 @@ def main():
 
 			# for testing
 			if currentTime > startHoldTime  + time_creep+ 10:
-				inHold = False
+				in_hold = False
 
 		# just got out of hold
-		if inHoldFlag:
+		if in_holdFlag:
 			print("leaving hold for the first time")
 			endHoldTime = int(time.time())
 			holdTime = endHoldTime - startHoldTime
 			startTime = startTime + holdTime
 			expected_temp_values, expected_time_values = createExpectedValues(setPoints, startTime=startTime)
-			inHoldFlag = False
+			in_holdFlag = False
 
 			# for testing
 			time_values_test = expected_time_values
@@ -167,7 +167,7 @@ def main():
 
 		# Testing setting a new profile
 		if not newProfile and currentTime > startTime + 10:
-			inHold = True
+			in_hold = True
 			# setPoints = setPointsNew
 			# expected_temp_values, expected_time_values = createExpectedValues(setPoints, startTime=startTime)
 			# time_values_test = expected_time_values

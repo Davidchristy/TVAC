@@ -17,14 +17,14 @@ class VerbHandler(http.server.BaseHTTPRequestHandler):
 
     def do_GET(self):
         """Respond to a GET request."""
-        Logging.logEvent("Debug","Status Update", 
+        Logging.logEvent("Debug","Status Update",
             {"message": "Received GET Request",
              "level":1})
         path="NULL"
         try:
             path = self.path
 
-            Logging.logEvent("Debug","Status Update", 
+            Logging.logEvent("Debug","Status Update",
                 {"message": "GET Request Path: {}".format(path),
                  "level":2})
 
@@ -51,7 +51,6 @@ class VerbHandler(http.server.BaseHTTPRequestHandler):
                 '/getEventList':GetControl.get_event_list,
                 '/hardStop':GetControl.hard_stop,
                 '/hold':GetControl.hold_all_zones,
-                '/pause':GetControl.pause_all_zones,
                 '/resume':GetControl.resume_all_zones,
                 '/unHold':GetControl.un_hold_all_zones,
                 '/getVacuumState': GetControl.get_vacuum_state,
@@ -68,7 +67,7 @@ class VerbHandler(http.server.BaseHTTPRequestHandler):
             Logging.logEvent("Debug","Status Update",
                 {"message": "Sending GET Results",
                  "level":1})
-            Logging.logEvent("Debug","Status Update", 
+            Logging.logEvent("Debug","Status Update",
                 {"message": "GET Results: {}".format(str(result).encode()),
                  "level": 5})
 
@@ -83,7 +82,7 @@ class VerbHandler(http.server.BaseHTTPRequestHandler):
 
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            Logging.logEvent("Error","GET Handler", 
+            Logging.logEvent("Error","GET Handler",
                 {"type": exc_type,
                  "filename": fname,
                  "line": exc_tb.tb_lineno,
@@ -93,7 +92,7 @@ class VerbHandler(http.server.BaseHTTPRequestHandler):
                  "itemID":-1,
                  "details":"PATH: {} is not recognized".format(path)
                 })
-            Logging.logEvent("Debug","Status Update", 
+            Logging.logEvent("Debug","Status Update",
                 {"message": "There was a {} error in Server (GET Handler). File: {}:{}".format(exc_type,fname,exc_tb.tb_lineno),
                  "level":1})
 
@@ -105,13 +104,13 @@ class VerbHandler(http.server.BaseHTTPRequestHandler):
     def do_POST(self):
         """Respond to a POST request."""
         try:
-            Logging.logEvent("Debug","Status Update", 
+            Logging.logEvent("Debug","Status Update",
                 {"message": "Received Post Request",
                  "level":1})
             body = self.getBody()
             path = self.path
             
-            Logging.logEvent("Debug","Status Update", 
+            Logging.logEvent("Debug","Status Update",
                 {"message": "POST Request Path: {}".format(path),
                  "level":2})
 
@@ -125,8 +124,6 @@ class VerbHandler(http.server.BaseHTTPRequestHandler):
             result = {
                 '/saveProfile': PostControl.save_profile,
                 '/loadProfile' : PostControl.load_profile,
-                '/pauseZone': PostControl.pause_single_thread,
-                '/pauseRemoveZone': PostControl.remove_pause_single_thread,
                 '/holdZone': PostControl.hold_single_thread,
                 '/releaseHoldZone': PostControl.release_hold_single_thread,
                 '/SendHwCmd': PostControl.send_hw_cmd,
@@ -136,10 +133,10 @@ class VerbHandler(http.server.BaseHTTPRequestHandler):
                 '/heatUpShroud': PostControl.heat_up_shroud,
             }[path](contractObj)
 
-            Logging.logEvent("Debug","Status Update", 
+            Logging.logEvent("Debug","Status Update",
                 {"message": "Sending POST Results",
                  "level":1})
-            Logging.logEvent("Debug","Status Update", 
+            Logging.logEvent("Debug","Status Update",
                 {"message": "POST Results: {}".format(str(result).replace("\"","'").encode()),
                  "level":2})
 
@@ -151,20 +148,20 @@ class VerbHandler(http.server.BaseHTTPRequestHandler):
 
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            Logging.logEvent("Error","POST Handler", 
+            Logging.logEvent("Error","POST Handler",
                 {"type": exc_type,
                  "filename": fname,
                  "line": exc_tb.tb_lineno,
                  "thread": "Verb Handler"
                 })
-            Logging.logEvent("Debug","Status Update", 
+            Logging.logEvent("Debug","Status Update",
                 {"message": "There was a {} error in Server (POST Handler). File: {}:{}".format(exc_type,fname,exc_tb.tb_lineno),
                  "level":1})
 
             self.setHeader()
             output = '{"Error":"%s"}\n'%(e)
             self.wfile.write(output.encode())
-            raise(e)
+            raise e
 
 
 

@@ -1,32 +1,21 @@
 from Collections.ProfileInstance import ProfileInstance
 from Collections.HardwareStatusInstance import HardwareStatusInstance
 from ThreadControls.ThreadCollectionInstance import ThreadCollectionInstance
-
+import ThreadControls.ThreadHelperFunctions as ThreadHelperFunctions
+import Collections.ProfileHelperFunctions as ProfileHelperFunctions
 from Logging.Logging import Logging
 
 
 def load_profile(data):
     if not HardwareStatusInstance.getInstance().pc_104.digital_in.chamber_closed:
         return "{'Error door is open':'Error: Door is open'}"
-    profile_instance = ProfileInstance.getInstance()
-    return profile_instance.zoneProfiles.load_profile(data["profile_name"])
+    pi = ProfileInstance.getInstance()
+    return pi.load_profile(data["profile_name"])
 
 
 def save_profile(data):
-    profile_instance = ProfileInstance.getInstance()
-    return profile_instance.zoneProfiles.save_profile(data)
-
-
-def pause_single_thread(data):
-    threadInstance = ThreadCollectionInstance.getInstance()
-    threadInstance.threadCollection.pause(data)
-    return "{'result':'success'}"
-
-
-def remove_pause_single_thread(data):
-    thread_instance = ThreadCollectionInstance.getInstance()
-    thread_instance.threadCollection.removePause(data)
-    return "{'result':'success'}"
+    pi = ProfileInstance.getInstance()
+    return ProfileHelperFunctions.save_profile(data, pi=pi)
 
 
 def hold_single_thread(data):
@@ -35,9 +24,9 @@ def hold_single_thread(data):
     return "{'result':'success'}"
 
 
+# TODO: What if this doesn't work?
 def release_hold_single_thread(data):
-    thread_instance = ThreadCollectionInstance.getInstance()
-    thread_instance.threadCollection.releaseHoldThread(data)
+    ThreadHelperFunctions.release_hold()
     return "{'result':'success'}"
 
 
@@ -45,7 +34,7 @@ def send_hw_cmd(data):
     if type(data) is not list:
         return '{"result":"Needs a json dictionary of a cmds."}'
     hw = HardwareStatusInstance.getInstance()
-    Logging.debugPrint(3,"POST: SendHwCmd '%s'" % data)
+    Logging.debug_print(3, "POST: SendHwCmd '%s'" % data)
     if data[0] == "Shi_MCC_Cmds":  # ['cmd', arg, arg,... arg]
         hw.shi_mcc_cmds.append(data[1:])
     elif data[0] == "Shi_Compressor_Cmds":  # 'cmd'
@@ -60,9 +49,9 @@ def send_hw_cmd(data):
 def set_pc_104_digital(data):
     if HardwareStatusInstance.getInstance().pc_104.digital_in.chamber_closed:
         pins = HardwareStatusInstance.getInstance().pc_104
-        Logging.debugPrint(3,"POST: setPC104_Digital '%s'" % data)
+        Logging.debug_print(3, "POST: setPC104_Digital '%s'" % data)
         pins.digital_out.update(data)
-        Logging.debugPrint(4,"Digital out data: '%s'" % pins.digital_out.getJson())
+        Logging.debug_print(4, "Digital out data: '%s'" % pins.digital_out.getJson())
         return "{'result':'success'}"
     else:
         return "{'result':'error'}"
@@ -79,7 +68,7 @@ def set_pc_104_analog(data):
 def heat_up_shroud(data):
     duty_cycle = float(data['dutyCycle'])
     tdk_lambda = HardwareStatusInstance.getInstance().tdk_lambda_ps
-    if not ProfileInstance.getInstance().activeProfile:
+    if not ProfileInstance.getInstance().active_profile:
         if duty_cycle == 0:
             if tdk_lambda.get_shroud_left().output_enable or tdk_lambda.get_shroud_right().output_enable:
                 HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Disable Shroud Output'])
@@ -99,7 +88,7 @@ def heat_up_shroud(data):
 def heat_up_platen(data):
     duty_cycle = float(data['dutyCycle'])
     tdk_lambda = HardwareStatusInstance.getInstance().tdk_lambda_ps
-    if not ProfileInstance.getInstance().activeProfile:
+    if not ProfileInstance.getInstance().active_profile:
         if duty_cycle == 0:
             if tdk_lambda.get_platen_left().output_enable or tdk_lambda.get_platen_right().output_enable:
                 HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Disable Platen Output'])

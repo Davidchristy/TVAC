@@ -20,18 +20,6 @@ class MyTestCase(unittest.TestCase):
     #     results = PostControl.run_single_profile(data)
     #     print(results)
 
-    def test_pause_single_thread(self):
-        print("pause_single_thread")
-        data = {"Test": "data"}
-        results = PostControl.pause_single_thread(data)
-        print(results)
-
-    def test_remove_pause_single_thread(self):
-        print("remove_pause_single_thread")
-        data = {"Test": "data"}
-        results = PostControl.remove_pause_single_thread(data)
-        print(results)
-
     def test_hold_single_thread(self):
         print("hold_single_thread")
         data = {"Test": "data"}

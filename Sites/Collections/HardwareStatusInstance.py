@@ -28,28 +28,34 @@ class HardwareStatusInstance:
                 {"message": "Creating HardwareStatusInstance",
                  "level":2})
             self.thermocouples = ThermocoupleCollection()
+
             self.pfeiffer_gauges = PfeifferGaugeCollection()
+
             self.shi_cryopump = ShiCryopumpCollection()
             self.shi_mcc_cmds = []  # ['cmd', arg, arg,... arg]
             self.shi_compressor_cmds = []  # 'cmd'
+
             self.tdk_lambda_ps = TdkLambdaCollection()
             self.tdk_lambda_cmds = []  # ['cmd', arg, arg,... arg]
+
             self.pc_104 = PC_104_Instance.getInstance()
 
             self.sql_list = []
 
             # System Wide Stats
+
+            # TODO: Take out this check, but first see what actions it might cause
             if os.name == "posix":
                 user_name = os.environ['LOGNAME']
             else:
                 user_name = "user"
             if "root" in user_name:
                 self.operational_vacuum = False
-                
             else:
                 self.operational_vacuum = True
             self.vacuum_state = None
 
+            # Set to power to be true on all devices, if they are fault, it will tell switch to False
             self.pfeiffer_gauge_power = True
             self.shi_compressor_power = True
             self.shi_mcc_power = True
@@ -57,8 +63,7 @@ class HardwareStatusInstance:
             self.thermocouple_power = True
             self.pc_104_power = True
 
+            # A system wide spec to see if we are over heated...used to not turn on the heater
             self.overheated_tc = False
-
-            self.duty_cycle_errors = []
 
             HardwareStatusInstance.__instance = self

@@ -1,74 +1,54 @@
-import datetime
-import time
-
 from Collections.ProfileInstance import ProfileInstance
-from Logging.Logging import Logging
-from Logging.MySql import MySQlConnect
+from Logging.Logging import Logging, insert_into_sql
 from ThreadControls.SafetyCheck import SafetyCheck
 from ThreadControls.controlStubs.DutyCycleControlStub import DutyCycleControlStub
-from ThreadControls.controlStubs.LN2ControlStub import LN2ControlStub
 from ThreadControls.controlStubs.VacuumControlStub import VacuumControlStub
 from ThreadControls.updaters.PfeifferGaugeUpdater import PfeifferGaugeUpdater
 from ThreadControls.updaters.hardwareUpdater import HardwareUpdater
 from ThreadControls.updaters.TsRegistersUpdater import TsRegistersUpdater
-from Collections.HardwareStatusInstance import HardwareStatusInstance
-
+import Collections.ProfileHelperFunctions as ProfileHelperFunctions
 
 class ThreadCollection:
 
+    # noinspection PyTypeChecker
     def __init__(self):
+        pi = ProfileInstance.getInstance()
         self.dutyCycleThread = DutyCycleControlStub(parent=self)
-        self.hardwareInterfaceThreadDict = self.createHardwareInterfaces(parent=self)
+        self.hardwareInterfaceThreadDict = self.create_hardware_interfaces(parent=self)
         self.safetyThread = SafetyCheck(parent=self)
 
-        self.zoneProfiles = ProfileInstance.getInstance().zoneProfiles
+        self.run_threads()
+        result = {}
+        try:
+            result = ProfileHelperFunctions.return_active_profile()
+            # if there is a half finished profile in the database
+            active_profile_present = True
+        except RuntimeError:
+            active_profile_present = False
+        Logging.debug_print(3, "Active Profile?: {}".format(active_profile_present))
+        if active_profile_present:
+            Logging.debug_print(1, "Unfinished profile found: {}".format(str(result['profile_name'])))
 
-        self.runThreads()
-
-        # if there is a half finished profile in the database
-        result = self.returnActiveProfile()
-        Logging.debugPrint(3,"Active Profile?: {}".format(result))
-        if result:
-            Logging.debugPrint(1, "Unfinished profile found: {}".format(str(result['profile_name'])))
             # load up ram (zone collection) with info from the database and the given start time
-            self.zoneProfiles.load_profile(result['profile_name'], result['profile_Start_Time'], result['thermal_Start_Time'], result['first_Soak_Start_Time'])
+            pi.load_profile(result['profile_name'], result['profile_Start_Time'],
+                            result['thermal_Start_Time'])
+
             # after it's in memory, run it!
-            self.run_profile(firstStart = False)
+            ProfileHelperFunctions.run_profile(pi=pi, first_start = False)
         # end if no active profile
     #end of function 
 
-
-    def returnActiveProfile(self):
-        '''
-        A helper function that will look in the DB to see if there is any half finished profile instances
-        Returns the profile profile_name and Profile ID if there is, False, False if not
-        '''
-        sql = "SELECT profile_name, profile_Start_Time, thermal_Start_Time, first_Soak_Start_Time FROM tvac.Profile_Instance WHERE endTime IS NULL;"
-        try:
-            mysql = MySQlConnect()
-            mysql.cur.execute(sql)
-            mysql.conn.commit()
-        except Exception as e:
-            return (False, e)
-
-        result = mysql.cur.fetchone()
-        if not result:
-            return False
-        return result
-        
-
-    def createHardwareInterfaces(self,parent):
+    def create_hardware_interfaces(self, parent):
         # sending parent for testing, getting current profile data to zone instance
         return {
             1: TsRegistersUpdater(parent=parent),
             2: HardwareUpdater(parent=parent),
             3: PfeifferGaugeUpdater(),
-            4: LN2ControlStub(ThreadCollection=parent),
-            5: VacuumControlStub(),
+            4: VacuumControlStub(),
             }
 
 
-    def runThreads(self):
+    def run_threads(self):
         # Starts all the hw threads
         try:
             for key in sorted(self.hardwareInterfaceThreadDict.keys()):
@@ -79,90 +59,13 @@ class ThreadCollection:
             self.dutyCycleThread.daemon = True
             self.dutyCycleThread.start()
         except Exception as e:
-            Logging.debugPrint(1, "Error in runThreads, ThreadCollections: {}".format(str(e)))
+            Logging.debug_print(1, "Error in runThreads, ThreadCollections: {}".format(str(e)))
             if Logging.debug:
                 raise e
 
-
-
-    def addProfileInstancetoBD(self):
-        '''
-        This is a helper function of runProfile that adds the new profile Instance to the DB
-        '''
-
-        coloums = "( profile_name, profile_I_ID, profile_Start_Time )"
-        values = "( \"{}\",\"{}\", \"{}\" )".format(self.zoneProfiles.profileName,self.zoneProfiles.profileUUID, datetime.datetime.fromtimestamp(time.time()))
-        sql = "INSERT INTO tvac.Profile_Instance {} VALUES {};".format(coloums, values)
-        HardwareStatusInstance.getInstance().sql_list.append(sql)
-        # print(sql)
-        # mysql = MySQlConnect()
-        # try:
-        #     mysql.cur.execute(sql)
-        #     mysql.conn.commit()
-        # except Exception as e:
-        #     return e
-
-        return True
-
-    def run_profile(self, firstStart=True):
-        '''
-        This assumes a profile is already loaded in RAM, it will start the profile
-        Also making an entry in the DB
-        '''
-
-        # Check to make sure there is an active profile in memory
-        if not self.zoneProfiles.profileName:
-            return "{'Error':'No Profile loaded in memory'}"
-
-        # if ProfileInstance.getInstance().activeProfile:
-        #     return "{'Error':'Profile Already running. Abort profile before starting new one.'}"            
-    
-        if firstStart:
-            result = self.addProfileInstancetoBD()
-            # If there is an error connecting to the DB, return it
-            if result != True:
-                return result
-
-        ProfileInstance.getInstance().activeProfile = True
-        Logging.debugPrint(2,"Setting Active Profile to True")
-
-        return "{'result':'success'}"
-        
-    def pause(self,data=None):
-        self.dutyCycleThread.paused = True
-
-    def removePause(self,data=None):
-        self.dutyCycleThread.paused = False
 
     def holdThread(self,data=None):
-        Logging.debugPrint(3,"Holding Zones")
-        ProfileInstance.getInstance().inHold = True
-        sql = "UPDATE System_Status SET in_hold=1;"
-        mysql = MySQlConnect()
-        try:
-            mysql.cur.execute(sql)
-            mysql.conn.commit()
-        except Exception as e:
-            Logging.debugPrint(3,"sql: {}".format(sql))
-            Logging.debugPrint(1, "Error in ThreadCollection, holdThread: {}".format(str(e)))
-            if Logging.debug:
-                raise e
-
-    def releaseHoldThread(self,data=None):
-        ProfileInstance.getInstance().inHold = False
-        sql = "UPDATE System_Status SET in_hold=0;"
-        mysql = MySQlConnect()
-        try:
-            mysql.cur.execute(sql)
-            mysql.conn.commit()
-        except Exception as e:
-            Logging.debugPrint(3,"sql: {}".format(sql))
-            Logging.debugPrint(1, "Error in ThreadCollection, holdThread: {}".format(str(e)))
-            if Logging.debug:
-                raise e
-
-
-    def abortThread(self,data):
-        thread = data['zone']
-        self.zoneThreadDict[thread].terminate()
-        self.zoneThreadDict[thread] = DutyCycleControlStub(args=(thread,))
+        Logging.debug_print(3, "Holding Zones")
+        ProfileInstance.getInstance().in_hold = True
+        sql_str = "UPDATE System_Status SET in_hold=1;"
+        insert_into_sql(sql_str=sql_str)

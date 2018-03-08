@@ -2,7 +2,7 @@ from keysight import Keysight
 from mcc import Mcc
 from tdk import Tdk
 from compressor import Compressor
-
+import time
 def main():
     keysight = Keysight(.1)
     keysight.daemon = True
@@ -21,7 +21,7 @@ def main():
     compressor.start()
 
     while True:
-        pass
+        time.sleep(5)
 
 if __name__ == '__main__':
     main()

@@ -9,17 +9,16 @@ from Logging.Logging import Logging
 class ThermocoupleCollection:
 
     def __init__(self, num = 120):
-        Logging.logEvent("Debug","Status Update", 
+        Logging.logEvent("Debug","Status Update",
                 {"message": "Creating ThermocoupleCollection",
                  "level": 2})
-        self.tcList = self.buildCollection(num)
+        self.tc_list = self.buildCollection(num)
         self.time = datetime.now()
         self.ValidTCs = []
         self.InvalidTCs = []
         self.recently_disconnected = []
-        for tc in self.tcList:
+        for tc in self.tc_list:
             self.updateValidTCs(tc)
-        ## TODO add alarms list
 
     def buildCollection(self, num):
         TCs = []
@@ -40,7 +39,7 @@ class ThermocoupleCollection:
             self.updateValidTCs(tc)
 
     def getTC(self, n):
-        for tc in self.tcList:
+        for tc in self.tc_list:
             if tc.Thermocouple == n:
                 return tc
         raise RuntimeError('Thermocouple #: %s is out of range' % n)
@@ -69,26 +68,26 @@ class ThermocoupleCollection:
         elif whichTCs == 'NotWorking':
             message.append('"TCs":[%s]' %','.join([tc.getJson(temp_units) for tc in self.InvalidTCs]))
         else:
-            message.append('"TCs":[%s]' %','.join([tc.getJson(temp_units) for tc in self.tcList]))
+            message.append('"TCs":[%s]' %','.join([tc.getJson(temp_units) for tc in self.tc_list]))
         message.append('}')
         return ''.join(message)
 
-if __name__ == '__main__':
-    tcColl = ThermocoupleCollection(5)
-    units = 'K'
-    print(' ')
-    print(tcColl.getJson())
-    print(tcColl.getJson(units,'Working'))
-    tcColl.update({'time': datetime.now(), 'tcList': [
-        {'Thermocouple': 2, 'temp': 34},
-        {'Thermocouple': 4, 'temp': 300, 'working': True}]})
-    print(' ')
-    print(tcColl.getJson())
-    print(tcColl.getJson(units,'Working'))
-    print(tcColl.getJson(units,'NotWorking'))
-    tcColl.update({'time': datetime.now(), 'tcList': [
-        {'Thermocouple': 4, 'temp': 342},
-        {'Thermocouple': 3, 'temp': 303, 'working': True}]})
-    print(' ')
-    print(tcColl.getJson(units,'Working'))
-    print(tcColl.getJson())
+# if __name__ == '__main__':
+#     tcColl = ThermocoupleCollection(5)
+#     units = 'K'
+#     print(' ')
+#     print(tcColl.getJson())
+#     print(tcColl.getJson(units,'Working'))
+#     tcColl.update({'time': datetime.now(), 'tcList': [
+#         {'Thermocouple': 2, 'temp': 34},
+#         {'Thermocouple': 4, 'temp': 300, 'working': True}]})
+#     print(' ')
+#     print(tcColl.getJson())
+#     print(tcColl.getJson(units,'Working'))
+#     print(tcColl.getJson(units,'NotWorking'))
+#     tcColl.update({'time': datetime.now(), 'tcList': [
+#         {'Thermocouple': 4, 'temp': 342},
+#         {'Thermocouple': 3, 'temp': 303, 'working': True}]})
+#     print(' ')
+#     print(tcColl.getJson(units,'Working'))
+#     print(tcColl.getJson())

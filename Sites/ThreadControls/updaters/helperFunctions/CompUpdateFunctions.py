@@ -1,9 +1,15 @@
 import time
 from Collections.HardwareStatusInstance import HardwareStatusInstance
 from Logging.Logging import Logging
+from ThreadControls.SafetyCheckHelperFunctions import log_hw_error
+from Collections.ProfileInstance import ProfileInstance
+
+
+
 
 def initialize_shi_compressor(compressor):
     hw = HardwareStatusInstance.getInstance()
+    pi = ProfileInstance.getInstance()
     # Thread "Start up" stuff goes here
     Logging.logEvent("Debug", "Status Update",
                      {"message": "Power on the Shi Compressor",
@@ -34,10 +40,14 @@ def initialize_shi_compressor(compressor):
 
 
     except RuntimeError as e:
-        print("ERROR: TDK: There has been an error with the TDK Lambda's ({})".format(e))
+        item = "Shi Compressor"
+        error_details = "ERROR: {}: There has been an error with the {} ({})".format(item, item, e)
+        log_hw_error(pi=pi, item=item, error_details=error_details)
     except TimeoutError as e:
-        print("ERROR: TDK: There has been a Timeout error with the TDK Lambda's ({})".format(e))
         HardwareStatusInstance.getInstance().shi_compressor_power = False
+        item = "Shi Compressor"
+        error_details = "ERROR: {}: There has been a Timeout error with the {} ({})".format(item, item, e)
+        log_hw_error(pi=pi, item=item, error_details=error_details)
     else:
         HardwareStatusInstance.getInstance().shi_compressor_power = True
 
@@ -50,6 +60,7 @@ def initialize_shi_compressor(compressor):
 def shi_compressor_update(compressor, comp_next_uptime_read,
                           comp_uptime_period, comp_next_status_read, comp_status_period):
     hw = HardwareStatusInstance.getInstance()
+    pi = ProfileInstance.getInstance()
     Logging.logEvent("Debug", "Status Update",
                      {"message": "Reading and writing with ShiCompressorUpdater.",
                       "level": 4})
@@ -76,10 +87,14 @@ def shi_compressor_update(compressor, comp_next_uptime_read,
             # end if/else
         # end while
     except RuntimeError as e:
-        print("ERROR: TDK: There has been an error with the TDK Lambda's ({})".format(e))
+        item = "Shi Compressor"
+        error_details = "ERROR: {}: There has been an error with the {} ({})".format(item, item, e)
+        log_hw_error(pi=pi, item=item, error_details=error_details)
     except TimeoutError as e:
-        print("ERROR: TDK: There has been a Timeout error with the TDK Lambda's ({})".format(e))
         HardwareStatusInstance.getInstance().shi_compressor_power = False
+        item = "Shi Compressor"
+        error_details = "ERROR: {}: There has been a Timeout error with the {} ({})".format(item, item, e)
+        log_hw_error(pi=pi, item=item, error_details=error_details)
     else:
         HardwareStatusInstance.getInstance().shi_compressor_power = True
 

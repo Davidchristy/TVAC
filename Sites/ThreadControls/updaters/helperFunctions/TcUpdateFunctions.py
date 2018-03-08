@@ -1,8 +1,9 @@
 import math, time
 from Collections.HardwareStatusInstance import HardwareStatusInstance
 from Collections.ProfileInstance import ProfileInstance
+from ThreadControls.SafetyCheckHelperFunctions import log_hw_error
 
-from Logging.Logging import Logging
+from Logging.Logging import Logging, insert_into_sql
 
 def log_live_temperature_data(data):
     '''
@@ -33,14 +34,14 @@ def log_live_temperature_data(data):
             continue
         values += "( \"{}\", \"{}\", {}, {} ),\n".format(profile, time.strftime('%Y-%m-%d %H:%M:%S'), thermocouple,
                                                          temperature)
-    sql = "INSERT INTO tvac.Real_Temperature {} VALUES {};".format(coloums, values[:-2])
+    sql_str = "INSERT INTO tvac.Real_Temperature {} VALUES {};".format(coloums, values[:-2])
 
-    sql.replace("nan", "NULL")
+    sql_str.replace("nan", "NULL")
 
-    HardwareStatusInstance.getInstance().sql_list.append(sql)
-
+    insert_into_sql(sql_str)
 
 def initialize_thermocouples(keysight):
+    pi = ProfileInstance.getInstance()
     Logging.logEvent("Debug", "Status Update",
                      {"message": "Starting ThermoCoupleUpdater",
                       "level": 2})
@@ -48,13 +49,17 @@ def initialize_thermocouples(keysight):
     try:
         keysight.init_sys()
     except RuntimeError as e:
-        # TODO: This needs to log to something...anything really
-        print("ERROR: KeySight: There has been an error with the KeySight ({})".format(e))
+        item = "KeySight"
+        error_details = "ERROR: {}: There has been an error with the {} ({})".format(item, item, e)
+        log_hw_error(pi=pi, item=item, error_details=error_details)
     except TimeoutError as e:
-        print("ERROR: KeySight: There has been a Timeout error with the KeySight ({})".format(e))
         HardwareStatusInstance.getInstance().thermocouple_power = False
+        item = "KeySight"
+        error_details = "ERROR: {}: There has been a Timeout error with the {} ({})".format(item, item, e)
+        log_hw_error(pi=pi, item=item, error_details=error_details)
     else:
         HardwareStatusInstance.getInstance().thermocouple_power = True
+
 
     tc_read_time = time.time()
     return tc_read_time
@@ -62,6 +67,7 @@ def initialize_thermocouples(keysight):
 
 def thermocouple_update(keysight, tc_read_time, tc_read_period):
     hw = HardwareStatusInstance.getInstance()
+    pi = ProfileInstance.getInstance()
 
     # If not enough time as passed, skip function
     if time.time() < tc_read_time:
@@ -76,11 +82,14 @@ def thermocouple_update(keysight, tc_read_time, tc_read_period):
         # Get the values from the TC's
         tc_values = keysight.get_tc_values()
     except RuntimeError as e:
-        # TODO: This needs to log to something...anything really
-        print("ERROR: KeySight: There has been an error with the KeySight ({})".format(e))
+        item = "KeySight"
+        error_details = "ERROR: {}: There has been an error with the {} ({})".format(item, item, e)
+        log_hw_error(pi=pi, item=item, error_details=error_details)
     except TimeoutError as e:
-        print("ERROR: KeySight: There has been a Timeout error with the KeySight ({})".format(e))
         HardwareStatusInstance.getInstance().thermocouple_power = False
+        item = "KeySight"
+        error_details = "ERROR: {}: There has been a Timeout error with the {} ({})".format(item, item, e)
+        log_hw_error(pi=pi, item=item, error_details=error_details)
     else:
         HardwareStatusInstance.getInstance().thermocouple_power = True
 
@@ -88,7 +97,7 @@ def thermocouple_update(keysight, tc_read_time, tc_read_period):
         if ProfileInstance.getInstance().record_data:
             log_live_temperature_data({"time": tc_values['time'],
                                        "tcList": tc_values['tcList'],
-                                       "profileUUID": ProfileInstance.getInstance().zoneProfiles.profileUUID})
+                                       "profileUUID": ProfileInstance.getInstance().profile_uuid})
         hw.thermocouples.update(tc_values)
         Logging.logEvent("Debug", "Data Dump",
                          {"message": "Current TC reading",

@@ -18,7 +18,7 @@ class ThreadCollectionInstance:
         if ThreadCollectionInstance.__instance != None:
             raise Exception("This class is a singleton!")
         else:
-            Logging.logEvent("Debug","Status Update", 
+            Logging.logEvent("Debug","Status Update",
                 {"message": "Creating ThreadCollectionInstance",
                  "level":2})
             self.threadCollection = ThreadCollection()

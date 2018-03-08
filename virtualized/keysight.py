@@ -31,6 +31,8 @@ def read_temps(data):
     alarm = "0"
     bank = data.split()[1][2]
 
+    time.sleep(5/3)
+
     tc_file = open("./hw-files/TC_bank_{}.txt".format(bank),"r")
     tc_str = ""
     for i, tc in enumerate(tc_file):
