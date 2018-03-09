@@ -31,8 +31,6 @@ class HardwareUpdater(Thread):
             self.keysight = Keysight34980ATcs()
             self.tc_read_period = 5
 
-            self.number_continuous_errors = 0
-            self.MAX_NUMBER_OF_ERRORS = 3
         except Exception as e:
             # TODO: Make this "go up" to the client computer?
             print("ERROR: There has been en error initializing, the hardwareUpdater Thread ({})".format(e))
@@ -58,6 +56,7 @@ class HardwareUpdater(Thread):
                 initialize_tdk_lambdas(self.tdk_lambda)
 
                 while True:
+                    # TODO: remove next line when done testing
                     start_time = time.time()
 
                     comp_next_uptime_read, comp_next_status_read = \
@@ -92,7 +91,7 @@ class HardwareUpdater(Thread):
                 error_details = "Unknown Hardware Error: ({})".format(e)
                 error_log = {
                     "time": str(datetime.datetime.now()),
-                    "event": "Duty Cycle Error",
+                    "event": "Hardware Error",
                     "item": "Unknown",
                     "itemID": 0,
                     "details": error_details,

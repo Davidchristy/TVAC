@@ -49,11 +49,11 @@ def response_good(address, response, parm=349):
         print("R:--" + response.replace('\r', r'\r') + "---", "Error: Logic access violation for the param:",
               str(parm))
         return False
-    return True  # Yea!! respomnce seems ok
+    return True  # Yea!! response seems ok
 
 
 def convert_str_to_pressure(buff, in_torr=True):
-    if len(buff) == 6 and buff.isdigit:
+    if len(buff) == 6 and buff.isdigit():
         p = float((float(buff[:4]) / 1000.0) * float(10 ** (int(buff[-2:]) - 20)))
         if p > 1e-10:
             if in_torr:  ## Return the Pressure in Torr.
@@ -78,63 +78,51 @@ def convert_pressure_to_str(pressure, in_torr=True):
     return "{:04d}{:02d}".format(a, b + 20)
 
 
-def send_receive(address, parm=349, data_str=None):
-    a = socket(AF_INET, SOCK_DGRAM)
-    a.settimeout(5)
-    for tries in range(3):
-        ip = '192.168.99.124'
+def send_receive(pi_socket, address, parm=349, data_str=None):
+    ip = '192.168.99.124'
 
-        if data_str is None:
-            tmp = gen_cmd_read(address, parm).encode()
-            # print("messing sending: {}".format(tmp))
-            a.sendto(tmp, (ip, 1234))
-            # print("after send")
-        else:
-            a.sendto(gen_cmd_write(address, parm, data_str).encode(), (ip, 1234))
-        time.sleep(0.060 * (tries + 1))
-        # print("about to wait for reply")
-        resp = ""
-        try:
-            response,_ = a.recvfrom(4092)
-            resp = response.decode().strip()
-        except timeout:
-            raise RuntimeError("Pfeiffer Gauge Not Replying")
-
-        # print("reply: \""+resp+"\"")
-        if response_good(address, resp, parm):
-            break
-        print("Try number: " + str(tries))
+    if data_str is None:
+        str_to_send = gen_cmd_read(address, parm).encode()
     else:
-        print("No more tries! Something is wrong!")
-        resp = "{:*^32}".format('Timeout!')
-    return resp[10:-3]
+        str_to_send = gen_cmd_write(address, parm, data_str).encode()
+
+    for tries in range(1, 4):
+
+        pi_socket.sendto(str_to_send, (ip, 1234))
+
+        # TODO: Look up response time from socket (and pi)
+        # After sending the data, wait a tiny amount of time for gauge to reply
+        time.sleep(0.060 * tries)
+        try:
+            response_raw,_ = pi_socket.recvfrom(4092)
+            response = response_raw.decode().strip()
+        except timeout:
+            # TODO: I really don't think it should work like this...
+            # Sleep to give time for wires to sort themselves out
+            time.sleep(.5)
+        else:
+            if response_good(address, response, parm):
+                break
+    else:
+        raise TimeoutError("Pfeiffer Gauge Not Replying.")
+    return response[10:-3]
 
 
 class PfeifferGauge:
 
     def __init__(self):
-        self.a = socket(AF_INET, SOCK_DGRAM)
+        self.pi_socket = socket(AF_INET, SOCK_DGRAM)
+        # TODO Research this timeout time
+        self.pi_socket.settimeout(.5)
 
-    # def SendReceive_Xuart(self, Address, Parm=349, dataStr=None):
-    #     p_gauge = open('/dev/ttyxuart2', 'r+b', buffering=0)
-    #     for tries in range(3):
-    #         if dataStr is None:
-    #             p_gauge.write(gen_cmd_read(Address, Parm).encode())
-    #         else:
-    #             p_gauge.write(gen_cmd_write(Address, Parm, dataStr).encode())
-    #         time.sleep(0.060 * (tries + 1))
-    #         Resp = p_gauge.read(113 * (tries + 1)).decode().strip()
-    #         if response_good(Address, Resp, Parm):
-    #             break
-    #         print("Try number: " + str(tries))
-    #     else:
-    #         print("No more tries! Something is wrong!")
-    #         Resp = "{:*^32}".format('Timeout!')
-    #     p_gauge.close()
-    #     return Resp[10:-3]
 
+    # TODO: Why is this not used on pressure gauge 3
+    def GetCorrCC(self, address):  # Get Cold Cathode Correction Value
+        return float(send_receive(pi_socket=self.pi_socket, address=address, parm=742))
+
+    # TODO: Why is this not used on pressure gauge 3
     def GetCCstate(self, address):  # Is the Cold Cathode Sensor on
-        buff = send_receive(address, 41)
+        buff = send_receive(pi_socket=self.pi_socket, address=address, parm=41)
         if buff == '0':
             return False
         elif buff == '1':
@@ -142,102 +130,118 @@ class PfeifferGauge:
         else:
             raise ValueError("GetCCstate value not 0 or 1: %s" % buff)
 
-    # Never used
-    def SetCCstate(self, address, cc_on):  # Set the Cold Cathode Sensor to on.
-        if not cc_on:
-            resp = send_receive(address, 41, '0')
-            if resp != '0':
-                raise ValueError("SetCCstate value not set to 0: %s" % resp)
-        else:
-            resp = send_receive(address, 41, '1')
-            if resp != '1':
-                raise ValueError("SetCCstate value not set to 1: %s" % resp)
 
+    # TODO: Why is this not used on pressure gauge 3
     def GetSwMode(self, address):  # Get Cold Cathode switching range
-        buff = send_receive(address, 49)
-        if buff.isdigit:
+        buff = send_receive(pi_socket=self.pi_socket, address=address, parm=49)
+        if buff.isdigit():
             return int(buff)
         else:
             raise ValueError("GetSwMode value not 0 or 1: %s" % buff)
 
-    # Never used
-    def SetSwMode(self, address, cc_on):  # Set the Cold Cathode switching range to trans_LO.
-        if not cc_on:
-            resp = send_receive(address, 49, '000')  # switch
-            if resp != '000':
-                raise ValueError("GetSwMode value not set to 0: %s" % resp)
-        else:
-            resp = send_receive(address, 49, '001')  # trans_LO
-            if resp != '001':
-                raise ValueError("GetSwMode value not set to 1: %s" % resp)
+
+    def GetCorrPir(self, address):  # Get Pirani Correction Value
+        return float(send_receive(pi_socket=self.pi_socket, address=address, parm=742))
+
 
     def GetError(self, address):  # Pfeifer returns an error in the gauge
-        return send_receive(address, 303)
+        return send_receive(pi_socket=self.pi_socket, address=address, parm=303)
+
 
     def GetSofwareV(self, address):  # Returns gauge's software version
-        return send_receive(address, 312)
+        return send_receive(pi_socket=self.pi_socket, address=address, parm=312)
+
 
     def GetModelName(self, address):  # Returns gauge's model name
-        return send_receive(address, 349)
+        return send_receive(pi_socket=self.pi_socket, address=address, parm=349)
+
 
     def GetSwPressure(self, address, sw2=False, in_torr=True):
         if sw2:
-            return convert_str_to_pressure(send_receive(address, 732), in_torr)
+            return convert_str_to_pressure(send_receive(pi_socket=self.pi_socket, address=address, parm=732), in_torr)
         else:
-            return convert_str_to_pressure(send_receive(address, 730), in_torr)
+            return convert_str_to_pressure(send_receive(pi_socket=self.pi_socket, address=address, parm=730), in_torr)
+
+
+
+    def GetPressure(self, address, in_torr=True):  # Pfeifer gauge returns pressure in hPa or Torr
+        return convert_str_to_pressure(send_receive(pi_socket=self.pi_socket, address=address, parm=740), in_torr)
+
 
     # Never used
-    def SetSwPressure(self, address, pressure, sw2=False, in_torr=True):
+    def set_sw_pressure(self, address, pressure, sw2=False, in_torr=True):
         data_str = convert_pressure_to_str(pressure, in_torr)
         if sw2:
-            resp = send_receive(address, 732, data_str)
+            resp = send_receive(pi_socket=self.pi_socket, address=address, parm=732, data_str=data_str)
         else:
-            resp = send_receive(address, 730, data_str)
+            resp = send_receive(pi_socket=self.pi_socket, address=address, parm=730, data_str=data_str)
         if data_str != resp:
             raise  ValueError("Error Setting Switch pressure. sent: '{}'; resp '{}'".format(data_str,resp))
 
-    def GetPressure(self, address, in_torr=True):  # Pfeifer gauge returns pressure in hPa or Torr
-        return convert_str_to_pressure(send_receive(address, 740), in_torr)
 
-    def SetPressure(self, address, pressure, in_torr=True):  # Set pressure in hPa or Torr for calibration.
+    # Never used
+    def set_pressure(self, address, pressure, in_torr=True):  # Set pressure in hPa or Torr for calibration.
         data_str = convert_pressure_to_str(pressure, in_torr)
-        resp = send_receive(address, 740, data_str)
+        resp = send_receive(pi_socket=self.pi_socket, address=address, parm=740, data_str=data_str)
         if data_str != resp:
             raise  ValueError("Error Setting pressure. Sent: '{}'; Resp: '{}'".format(data_str,resp))
 
-    def SetPressureSp(self, address, value):
+
+    # Never used
+    def set_pressure_sp(self, address, value):
         if value > 999:
             value = 999
         elif value < 0:
             value = 0
         data_str = "{:03d}".format(int(value))
-        resp = send_receive(address, 741, data_str)
+        resp = send_receive(pi_socket=self.pi_socket, address=address, parm=741, data_str=data_str)
         if data_str != resp:
             raise  ValueError("Error Setting pressure. Sent: '{}'; Resp: '{}'".format(data_str,resp))
 
-    def GetCorrPir(self, address):  # Get Pirani Correction Value
-        return float(send_receive(address, 742))
 
-    def SetCorrPir(self, address, value):  # Setting Pirani Correction Value
+    # Never used
+    def set_corr_pir(self, address, value):  # Setting Pirani Correction Value
         if value > 8.0:
             value = 8.0
         elif value < 0.2:
             value = 0.2
         data_str = "{:06d}".format(int(value*100))
-        resp = send_receive(address, 742, data_str)
+        resp = send_receive(pi_socket=self.pi_socket, address=address, parm=742, data_str=data_str)
         if data_str != resp:
             raise  ValueError("Error Setting Pirani Correction Value. Sent: '{}'; Resp: '{}'".format(data_str,resp))
 
-    def GetCorrCC(self, address):  # Get Cold Cathode Correction Value
-        return float(send_receive(address, 742))
 
-    def SetCorrCC(self, address, value):  # Setting Cold Cathode Correction Value
+    # Never used
+    def set_corr_cc(self, address, value):  # Setting Cold Cathode Correction Value
         if value > 8.0:
             value = 8.0
         elif value < 0.2:
             value = 0.2
         data_str = "{:06d}".format(int(value*100))
-        resp = send_receive(address, 742, data_str)
+        resp = send_receive(pi_socket=self.pi_socket, address=address, parm=742, data_str=data_str)
         if data_str != resp:
             raise  ValueError("Error Setting Cold Cathode Correction Value. Sent: '{}'; Resp: '{}'".format(data_str,resp))
 
+
+    # Never used
+    def set_cc_state(self, address, cc_on):  # Set the Cold Cathode Sensor to on.
+        if not cc_on:
+            resp = send_receive(pi_socket=self.pi_socket, address=address, parm=41, data_str='0')
+            if resp != '0':
+                raise ValueError("SetCCstate value not set to 0: %s" % resp)
+        else:
+            resp = send_receive(pi_socket=self.pi_socket, address=address, parm=41, data_str='1')
+            if resp != '1':
+                raise ValueError("SetCCstate value not set to 1: %s" % resp)
+
+
+    # Never used
+    def set_sw_mode(self, address, cc_on):  # Set the Cold Cathode switching range to trans_LO.
+        if not cc_on:
+            resp = send_receive(pi_socket=self.pi_socket, address=address, parm=49, data_str='000')  # switch
+            if resp != '000':
+                raise ValueError("GetSwMode value not set to 0: %s" % resp)
+        else:
+            resp = send_receive(pi_socket=self.pi_socket, address=address, parm=49, data_str='001')  # trans_LO
+            if resp != '001':
+                raise ValueError("GetSwMode value not set to 1: %s" % resp)

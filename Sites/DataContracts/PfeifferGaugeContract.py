@@ -42,16 +42,16 @@ class PfeifferGaugeContract:
                 self.cold_cathode_on = None
                 self.cc_overlap_switch = None
                 self.pirani_correction_value = None
-                self.cold_cathod_correction_value = None
+                self.cold_cathode_correction_value = None
             elif self.model_name == 'PPT 200':
                 self.model_name_ppt200 = True
                 self.cold_cathode_on = None
                 self.cc_overlap_switch = None
-                self.cold_cathod_correction_value = None
+                self.cold_cathode_correction_value = None
             elif self.model_name == 'RPT 200':
                 self.model_name_rpt200 = True
                 self.cold_cathode_on = None
-                self.cold_cathod_correction_value = None
+                self.cold_cathode_correction_value = None
             elif self.model_name == 'HPT 200':
                 self.model_name_hpt200 = True
             elif self.model_name == 'MPT 200':
@@ -80,7 +80,7 @@ class PfeifferGaugeContract:
             self.pirani_correction_value = d['Pirani Correction']
         if ('CC Correction' in d) and (self.model_name_hpt200 or
                                        self.model_name_mpt200):
-            self.cold_cathod_correction_value = d['CC Correction']
+            self.cold_cathode_correction_value = d['CC Correction']
         self.__lock.release()
 
     def getPressure(self):

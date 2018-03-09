@@ -1,7 +1,7 @@
 from Logging.MySql import MySQlConnect
 from datetime import datetime
 import time, threading
-
+import pymysql
 
 _mySqlConnect = MySQlConnect()
 _sql_lock = threading.Lock()
@@ -12,6 +12,8 @@ def insert_into_sql(sql_str):
             mysql = _mySqlConnect
             mysql.cur.execute(sql_str)
             mysql.conn.commit()
+        except pymysql.err.DataError:
+            Logging.debug_print(1, "Couldn't send last string to Database")
         except Exception as e:
             raise e
 

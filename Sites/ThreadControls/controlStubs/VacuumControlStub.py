@@ -51,7 +51,7 @@ class VacuumControlStub(Thread):
                              {"message": "VCS: Starting VacuumControlStub",
                               "level": 2})
             try:
-                while not self.wait_for_hardware():  # Wait for hardware drivers to read sensors.
+                while not self.wait_for_hardware() and not HardwareStatusInstance.getInstance().pc_104.digital_in.chamber_closed:  # Wait for hardware drivers to read sensors.
                     Logging.logEvent("Debug", "Status Update",
                                      {"message": "VCS: VacuumControlStub waiting for hardware to read the sensors.",
                                       "level": 4})

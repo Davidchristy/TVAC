@@ -4,7 +4,6 @@ import ThreadControls.ThreadHelperFunctions
 from Collections.ProfileInstance import ProfileInstance
 from Logging.Logging import Logging, insert_into_sql, sql_fetch_one, sql_fetch_all
 from Collections.HardwareStatusInstance import HardwareStatusInstance
-from ThreadControls.controlStubs.DutyCycleControlStub import find_lowest_shroud_duty_cycle
 
 
 def fill_temps_for_set_point(current_temp, current_time, real_time, interval_temp, interval_time, ramp_end_time):
@@ -506,8 +505,8 @@ def ending_active_profile():
     pi.vacuum_wanted = False
     sql_str = "UPDATE System_Status SET vacuum_wanted=0;"
     insert_into_sql(sql_str=sql_str)
-    pi.rebuild_zones()
 
+    pi.rebuild_zones()
 
     pi.profile_name = None
     pi.profile_uuid = None
@@ -614,3 +613,15 @@ def ln2_update(pi, hw):
     else:
         hw.digital_out.update({'LN2-P Sol': False, })
         hw.analog_out.update({'LN2 Platen': 0})
+
+
+def find_lowest_shroud_duty_cycle(pi):
+    duty_cycle_list = []
+    for zone in pi.zone_dict:
+        zone = pi.zone_dict[zone]
+        if zone.active_zone_profile and zone.duty_cycle and zone.zone != 9:
+            duty_cycle_list.append(zone.duty_cycle)
+    if len(duty_cycle_list) > 0:
+        return min(duty_cycle_list)
+    else:
+        return None

@@ -20,7 +20,7 @@ def get_tvac_status():
         "currentSetpoint": pi.current_setpoint,
         "inRamp": pi.in_ramp,
         "inHold": pi.in_hold,
-        "inPause": pi.inPause,
+        "inPause": False,
         'inCryoPumpRegen': hw.shi_cryopump.is_regen_active(),
         'CryoPressure': hw.pfeiffer_gauges.get_cryopump_pressure(),
         'ChamberPressure': hw.pfeiffer_gauges.get_chamber_pressure(),

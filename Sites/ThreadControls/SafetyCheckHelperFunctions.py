@@ -1,5 +1,4 @@
 import datetime
-from datetime import datetime
 
 from Collections.HardwareStatusInstance import HardwareStatusInstance
 from Collections.ProfileInstance import ProfileInstance
@@ -223,10 +222,10 @@ def test_if_left_vacuum_while_in_active_profile(hw, pi, temp_error_dict):
     try:
         current_pressure = hw.pfeiffer_gauges.get_chamber_pressure()
 
-        if current_pressure > 1e-4 and pi.active_profile:
+        if current_pressure and current_pressure > 1e-4 and pi.active_profile:
             error_detail = "Chamber Pressure is above Operational Vacuum ({}) while in active profile".format(current_pressure)
             error = {
-                "time": str(datetime.now()),
+                "time": str(datetime.datetime.now()),
                 "event": "Raised Pressure While Testing",
                 "item": "Pressure",
                 "itemID": 0,

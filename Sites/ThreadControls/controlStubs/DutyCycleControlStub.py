@@ -9,17 +9,6 @@ from ThreadControls.controlStubs.HelperFuctions.dutyCycleFunctions import check_
     active_profile_setup, duty_cycle_update, check_hold, ln2_update
 from ThreadControls.SafetyCheckHelperFunctions import enter_safe_mode, log_event
 
-def find_lowest_shroud_duty_cycle(pi):
-    duty_cycle_list = []
-    for zone in pi.zone_dict:
-        zone = pi.zone_dict[zone]
-        if zone.active_zone_profile and zone.duty_cycle and zone.zone != 9:
-            duty_cycle_list.append(zone.duty_cycle)
-    if len(duty_cycle_list) > 0:
-        return min(duty_cycle_list)
-    else:
-        return None
-
 
 class DutyCycleControlStub(Thread):
     """
