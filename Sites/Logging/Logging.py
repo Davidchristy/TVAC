@@ -13,7 +13,12 @@ def insert_into_sql(sql_str):
             mysql.cur.execute(sql_str)
             mysql.conn.commit()
         except pymysql.err.DataError:
-            Logging.debug_print(1, "Couldn't send last string to Database")
+            pass
+        except pymysql.err.ProgrammingError as e:
+            mysql = _mySqlConnect
+            sql_str_final = mysql.conn.escape_string(sql_str)
+            mysql.cur.execute(sql_str_final)
+            mysql.conn.commit()
         except Exception as e:
             raise e
 

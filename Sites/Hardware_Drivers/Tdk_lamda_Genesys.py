@@ -135,18 +135,20 @@ class TdkLambdaGenesys:
 
     # TODO put coersing limits on program values
     def set_pv(self, volt):
-        if self.hw.operational_vacuum and not self.hw.overheated_tc:
+        if volt != 0 and self.hw.operational_vacuum and not self.hw.overheated_tc:
             resp = self.send_cmd('PV {:0.2f}'.format(volt))
         else:
-            raise RuntimeError("System is to hot, shutting down TDK heater.")
+            self.send_cmd('PV {:0.2f}'.format(0))
+            raise RuntimeError("System is too hot or not in vacuum, shutting down TDK heater.")
         if resp != 'OK':
             raise RuntimeError('PV {:0.2f} Response: "{:s}" is not "OK"'.format(volt, resp))
 
     def set_pc(self, current):
-        if self.hw.operational_vacuum and not self.hw.overheated_tc:
+        if current != 0 and self.hw.operational_vacuum and not self.hw.overheated_tc:
             resp = self.send_cmd('PC {:0.3f}'.format(current))
         else:
-            raise RuntimeError("System is to hot, shutting down TDK heater.")
+            self.send_cmd('PV {:0.2f}'.format(0))
+            raise RuntimeError("System is too hot or not in vacuum, shutting down TDK heater.")
         if resp != 'OK':
             raise RuntimeError('Pc {:0.2f} Response: "{:s}" is not "OK"'.format(current, resp))
 

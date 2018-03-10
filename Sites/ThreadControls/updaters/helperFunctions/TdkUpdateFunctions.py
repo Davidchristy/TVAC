@@ -31,42 +31,48 @@ def initialize_tdk_lambdas(tdk_lambda):
         item = "TDK Lambda"
         error_details = "ERROR: {}: There has been an error with the {} ({})".format(item, item, e)
         log_hw_error(pi=pi, item=item, error_details=error_details)
+        error = True
     except TimeoutError as e:
         HardwareStatusInstance.getInstance().tdk_lambda_power  = False
         item = "TDK Lambda"
         error_details = "ERROR: {}: There has been a Timeout error with the {} ({})".format(item, item, e)
         log_hw_error(pi=pi, item=item, error_details=error_details)
+        error = True
     else:
         HardwareStatusInstance.getInstance().tdk_lambda_power = True
+        error = False
     hw.tdk_lambda_ps.update_tdk_lambda(update_power_supplies)
 
-
+    return error
 
 def tdk_lambda_update(tdk_lambda):
     hw = HardwareStatusInstance.getInstance()
     pi = ProfileInstance.getInstance()
-    if hw.operational_vacuum:
-        try:
-            # This is here to clear any old data that might be in the port, waiting for .2 seconds to allow for HW to reply
-            tdk_lambda.flush_port(.2)
+    try:
+        # This is here to clear any old data that might be in the port, waiting for .2 seconds to allow for HW to reply
+        tdk_lambda.flush_port(.2)
 
-            # Loop through all the potential commands to do.
-            while hw.tdk_lambda_cmds:
-                cmd = hw.tdk_lambda_cmds.pop(0)
-                process_tkd_lambda_command(cmd, tdk_lambda=tdk_lambda)
+        # Loop through all the potential commands to do.
+        while hw.tdk_lambda_cmds:
+            cmd = hw.tdk_lambda_cmds.pop(0)
+            process_tkd_lambda_command(cmd, tdk_lambda=tdk_lambda)
 
-        except RuntimeError as e:
-            item = "TDK Lambda"
-            error_details = "ERROR: {}: There has been an error with the {} ({})".format(item, item, e)
-            log_hw_error(pi=pi, item=item, error_details=error_details)
-        except TimeoutError as e:
-            hw.tdk_lambda_power = False
-            item = "TDK Lambda"
-            error_details = "ERROR: {}: There has been a Timeout error with the {} ({})".format(item, item, e)
-            log_hw_error(pi=pi, item=item, error_details=error_details)
-        else:
-            hw.tdk_lambda_power = True
+    except RuntimeError as e:
+        item = "TDK Lambda"
+        error_details = "ERROR: {}: There has been an error with the {} ({})".format(item, item, e)
+        log_hw_error(pi=pi, item=item, error_details=error_details)
+        error = True
+    except TimeoutError as e:
+        hw.tdk_lambda_power = False
+        item = "TDK Lambda"
+        error_details = "ERROR: {}: There has been a Timeout error with the {} ({})".format(item, item, e)
+        log_hw_error(pi=pi, item=item, error_details=error_details)
+        error = True
+    else:
+        hw.tdk_lambda_power = True
+        error = False
 
+    return error
 
 def process_tkd_lambda_command(cmd, tdk_lambda):
     """
@@ -93,6 +99,7 @@ def process_tkd_lambda_command(cmd, tdk_lambda):
         power_type[cmd[2]](cmd[1])
         # If these are used, you can skip the rest of the code
         return
+
 
     tdk_lambda_cmds = [
         # Not used

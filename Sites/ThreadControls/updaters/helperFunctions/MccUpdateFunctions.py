@@ -117,7 +117,6 @@ def initialize_shi_mcc(mcc):
         hw.pc_104.digital_out.update({'MCC2 Power': True})
         if not currently_powered:
             time.sleep(1)
-        print("MCC should be on by now")
 
         # This is here to clear any old data that might be in the port, waiting for .2 seconds to allow for HW to reply
         mcc.flush_port(.2)
@@ -138,19 +137,22 @@ def initialize_shi_mcc(mcc):
         item = "Shi MCC"
         error_details = "ERROR: {}: There has been an error with the {} ({})".format(item, item, e)
         log_hw_error(pi=pi, item=item, error_details=error_details)
+        error = True
     except TimeoutError as e:
         HardwareStatusInstance.getInstance().shi_mcc_power = False
         item = "Shi MCC"
         error_details = "ERROR: {}: There has been a Timeout error with the {} ({})".format(item, item, e)
         log_hw_error(pi=pi, item=item, error_details=error_details)
+        error = True
     else:
         HardwareStatusInstance.getInstance().shi_mcc_power = True
+        error = False
     # This is next time the code should read mcc parameters...
     # It gets initialized to current time so they are read ASAP
     next_param_read_time = time.time()
     mcc_status_read_time = time.time()
 
-    return next_param_read_time, mcc_status_read_time
+    return error, next_param_read_time, mcc_status_read_time
 
 def shi_mcc_update(mcc, next_param_read_time, mcc_param_period, mcc_status_read_time, mcc_status_period):
     hw = HardwareStatusInstance.getInstance()
@@ -186,12 +188,16 @@ def shi_mcc_update(mcc, next_param_read_time, mcc_param_period, mcc_status_read_
         item = "Shi MCC"
         error_details = "ERROR: {}: There has been an error with the {} ({})".format(item, item, e)
         log_hw_error(pi=pi, item=item, error_details=error_details)
+        error = True
     except TimeoutError as e:
         hw.shi_mcc_power = False
         item = "Shi MCC"
         error_details = "ERROR: {}: There has been a Timeout error with the {} ({})".format(item, item, e)
         log_hw_error(pi=pi, item=item, error_details=error_details)
+        error = True
     else:
         hw.shi_mcc_power = True
+        error = False
 
-    return next_param_read_time, mcc_status_read_time
+
+    return error, next_param_read_time, mcc_status_read_time

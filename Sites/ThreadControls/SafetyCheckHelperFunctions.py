@@ -8,11 +8,17 @@ from ThreadControls.ThreadHelperFunctions import release_hold
 
 def power_failure():
     results = True
+    # Done
     results = results and HardwareStatusInstance.getInstance().pfeiffer_gauge_power
+    # Done
     results = results and HardwareStatusInstance.getInstance().shi_compressor_power
+    # Done
     results = results and HardwareStatusInstance.getInstance().shi_mcc_power
+    # Done
     results = results and HardwareStatusInstance.getInstance().tdk_lambda_power
+    # Done
     results = results and HardwareStatusInstance.getInstance().thermocouple_power
+
     results = results and HardwareStatusInstance.getInstance().pc_104_power
     return not results
 
@@ -206,7 +212,7 @@ def log_hw_error(pi, item, error_details):
 
     error_log = {
         "time": str(datetime.datetime.now()),
-        "event": "TDK Error",
+        "event": "Hardware  Error",
         "item": item,
         "itemID": 0,
         "details": error_details,

@@ -1,4 +1,4 @@
-import datetime
+import datetime, socket
 from threading import Thread
 
 from Hardware_Drivers.Shi_Compressor import ShiCompressor
@@ -18,6 +18,8 @@ class HardwareUpdater(Thread):
         Thread.__init__(self, name="HardwareUpdater")
 
         try:
+
+
             self.compressor = ShiCompressor()
             self.comp_status_period = 3
             self.comp_uptime_period = 120  # 120s = 2 min read period
@@ -47,38 +49,70 @@ class HardwareUpdater(Thread):
                                 {"message": "Starting Shi Compressor Updater",
                                 "level": 2})
 
-                comp_next_uptime_read, comp_next_status_read = initialize_shi_compressor(compressor=self.compressor)
+                # self.compressor = ShiCompressor()
+                # self.mcc = ShiMcc()
+                # self.tdk_lambda = TdkLambdaGenesys()
+                # self.keysight = Keysight34980ATcs()
 
-                tc_read_time = initialize_thermocouples(self.keysight)
+                comp_error, comp_next_uptime_read, comp_next_status_read = initialize_shi_compressor(compressor=self.compressor)
 
-                next_mcc_param_read_time, mcc_status_read_time = initialize_shi_mcc(self.mcc)
+                tc_error, tc_read_time = initialize_thermocouples(self.keysight)
 
-                initialize_tdk_lambdas(self.tdk_lambda)
+                mcc_error, next_mcc_param_read_time, mcc_status_read_time = initialize_shi_mcc(self.mcc)
+
+                tdk_error = initialize_tdk_lambdas(self.tdk_lambda)
 
                 while True:
                     # TODO: remove next line when done testing
                     start_time = time.time()
 
-                    comp_next_uptime_read, comp_next_status_read = \
-                        shi_compressor_update(compressor=self.compressor,
-                                              comp_next_uptime_read = comp_next_uptime_read,
-                                              comp_uptime_period = self.comp_uptime_period,
-                                              comp_next_status_read = comp_next_status_read,
-                                              comp_status_period = self.comp_status_period)
+                    if comp_error:
+                        self.compressor.close_port()
+                        self.compressor = ShiCompressor()
+                        comp_error, comp_next_uptime_read, comp_next_status_read = initialize_shi_compressor(
+                            compressor = self.compressor)
 
-                    next_mcc_param_read_time, mcc_status_read_time = shi_mcc_update(mcc=self.mcc,
-                                                                      next_param_read_time = next_mcc_param_read_time,
-                                                                      mcc_param_period =     self.mcc_param_period,
-                                                                      mcc_status_read_time = mcc_status_read_time,
-                                                                      mcc_status_period=     self.mcc_status_period)
+                    if not comp_error:
+                        comp_error, comp_next_uptime_read, comp_next_status_read = \
+                            shi_compressor_update(compressor=self.compressor,
+                                                  comp_next_uptime_read = comp_next_uptime_read,
+                                                  comp_uptime_period = self.comp_uptime_period,
+                                                  comp_next_status_read = comp_next_status_read,
+                                                  comp_status_period = self.comp_status_period)
 
-                    tc_read_time = thermocouple_update(self.keysight,
-                                                       tc_read_time=tc_read_time,
-                                                       tc_read_period=self.tc_read_period)
+                    if tc_error:
+                        self.keysight.close()
+                        try:
+                            self.keysight = Keysight34980ATcs()
+                        except socket.timeout:
+                            tc_error = True
+                        else:
+                            tc_error, tc_read_time = initialize_thermocouples(self.keysight)
+
+                    if not tc_error:
+                        tc_error, tc_read_time = thermocouple_update(self.keysight,
+                                                           tc_read_time=tc_read_time,
+                                                           tc_read_period=self.tc_read_period)
 
 
-                    # This has no timer because it has no regular checks.
-                    tdk_lambda_update(tdk_lambda=self.tdk_lambda)
+                    if mcc_error:
+                        self.mcc.close_port()
+                        self.mcc = ShiMcc()
+                        mcc_error, next_mcc_param_read_time, mcc_status_read_time = initialize_shi_mcc(self.mcc)
+                    if not mcc_error:
+                        mcc_error, next_mcc_param_read_time, mcc_status_read_time = shi_mcc_update(mcc=self.mcc,
+                                                                          next_param_read_time = next_mcc_param_read_time,
+                                                                          mcc_param_period =     self.mcc_param_period,
+                                                                          mcc_status_read_time = mcc_status_read_time,
+                                                                          mcc_status_period =    self.mcc_status_period)
+
+                    if tdk_error:
+                        self.tdk_lambda.close_port()
+                        self.tdk_lambda = TdkLambdaGenesys()
+                        tdk_error = initialize_tdk_lambdas(self.tdk_lambda)
+                    if not tdk_error:
+                        # This has no timer because it has no regular checks.
+                        tdk_error = tdk_lambda_update(tdk_lambda=self.tdk_lambda)
 
 
                     print("Loop time: {}".format(round(time.time()-start_time,4)))

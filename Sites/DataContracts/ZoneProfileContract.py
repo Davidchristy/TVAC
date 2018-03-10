@@ -192,6 +192,16 @@ class ZoneProfileContract:
         self.__lock.release()
         return ''.join(message)
 
+    def turn_off_heat_in_zone(self):
+        hw = HardwareStatusInstance.getInstance()
+        if self.lamps:
+            d_out = hw.pc_104.digital_out
+            d_out.update({self.lamps[1] + " PWM DC": 0})
+            d_out.update({self.lamps[0] + " PWM DC": 0})
+        else:
+            # for zone 9, the platen
+            hw.tdk_lambda_cmds.append(['Platen Duty Cycle', 0])
+
     def calculate_duty_cycle(self, pi):
         hw = HardwareStatusInstance.getInstance()
         """

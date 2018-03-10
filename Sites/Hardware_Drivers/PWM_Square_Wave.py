@@ -61,32 +61,32 @@ class PWM_Square_Wave:
         return val
 
 
-if __name__ == '__main__':
-    import sys
-    sys.path.insert(0, '../')
-    from DataContracts.DigitalOutContract import DigitalOutContract
-
-    d_out = DigitalOutContract()
-    numbers = [1, 2]
-    offsets = [.4,.9]
-    duty_cycles = [0, 1]
-    pwm_wf = []
-    for i in range(len(numbers)):
-        pwm_wf.append(PWM_Square_Wave(5, offsets[i], "IR Lamp "+str(numbers[i]), d_out.update))
-        d_out.update({"IR Lamp " + str(numbers[i]) + " PWM DC": duty_cycles[i]})
-        print("Duty Cycle {:d}: {:f}".format(numbers[i], d_out.get_IR_Lamps_pwm_dc(numbers[i])))
-    start_time = round(time.time(), 2)
-
-    for n in range(200):
-        for i in range(len(numbers)):
-            pwm_wf[i].update_waveform_state(d_out.get_IR_Lamps_pwm_dc(numbers[i]))
-        print("b2: {:x}; \tb2: {:x}; \tTime: {:04.2f}".format(d_out.get_c1_b2(),
-                                                              d_out.get_c1_b3(),
-                                                              time.time()-start_time))
-        if n == 120:
-            duty_cycles = [.5, .4]
-            for i in range(len(numbers)):
-                # ---->> Use this as an example for updating PWM. <<----
-                d_out.update({"IR Lamp " + str(numbers[i]) + " PWM DC": duty_cycles[i]})
-        time.sleep(.1)
-
+# if __name__ == '__main__':
+#     import sys
+#     sys.path.insert(0, '../')
+#     from DataContracts.DigitalOutContract import DigitalOutContract
+#
+#     d_out = DigitalOutContract()
+#     numbers = [1, 2]
+#     offsets = [.4,.9]
+#     duty_cycles = [0, 1]
+#     pwm_wf = []
+#     for i in range(len(numbers)):
+#         pwm_wf.append(PWM_Square_Wave(5, offsets[i], "IR Lamp "+str(numbers[i]), d_out.update))
+#         d_out.update({"IR Lamp " + str(numbers[i]) + " PWM DC": duty_cycles[i]})
+#         print("Duty Cycle {:d}: {:f}".format(numbers[i], d_out.get_IR_Lamps_pwm_dc(numbers[i])))
+#     start_time = round(time.time(), 2)
+#
+#     for n in range(200):
+#         for i in range(len(numbers)):
+#             pwm_wf[i].update_waveform_state(d_out.get_IR_Lamps_pwm_dc(numbers[i]))
+#         print("b2: {:x}; \tb2: {:x}; \tTime: {:04.2f}".format(d_out.get_c1_b2(),
+#                                                               d_out.get_c1_b3(),
+#                                                               time.time()-start_time))
+#         if n == 120:
+#             duty_cycles = [.5, .4]
+#             for i in range(len(numbers)):
+#                 # ---->> Use this as an example for updating PWM. <<----
+#                 d_out.update({"IR Lamp " + str(numbers[i]) + " PWM DC": duty_cycles[i]})
+#         time.sleep(.1)
+#

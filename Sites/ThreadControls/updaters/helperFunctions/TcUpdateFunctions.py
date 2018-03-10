@@ -52,17 +52,20 @@ def initialize_thermocouples(keysight):
         item = "KeySight"
         error_details = "ERROR: {}: There has been an error with the {} ({})".format(item, item, e)
         log_hw_error(pi=pi, item=item, error_details=error_details)
+        error = True
     except TimeoutError as e:
         HardwareStatusInstance.getInstance().thermocouple_power = False
         item = "KeySight"
         error_details = "ERROR: {}: There has been a Timeout error with the {} ({})".format(item, item, e)
         log_hw_error(pi=pi, item=item, error_details=error_details)
+        error = True
     else:
         HardwareStatusInstance.getInstance().thermocouple_power = True
+        error = False
 
 
     tc_read_time = time.time()
-    return tc_read_time
+    return error, tc_read_time
 
 
 def thermocouple_update(keysight, tc_read_time, tc_read_period):
@@ -85,13 +88,16 @@ def thermocouple_update(keysight, tc_read_time, tc_read_period):
         item = "KeySight"
         error_details = "ERROR: {}: There has been an error with the {} ({})".format(item, item, e)
         log_hw_error(pi=pi, item=item, error_details=error_details)
+        error = True
     except TimeoutError as e:
         HardwareStatusInstance.getInstance().thermocouple_power = False
         item = "KeySight"
         error_details = "ERROR: {}: There has been a Timeout error with the {} ({})".format(item, item, e)
         log_hw_error(pi=pi, item=item, error_details=error_details)
+        error = True
     else:
         HardwareStatusInstance.getInstance().thermocouple_power = True
+        error = False
 
 
         if ProfileInstance.getInstance().record_data:
@@ -104,5 +110,5 @@ def thermocouple_update(keysight, tc_read_time, tc_read_period):
                           "level": 4,
                           "dict": tc_values['tcList']})
 
-    return tc_read_time
+    return error, tc_read_time
 

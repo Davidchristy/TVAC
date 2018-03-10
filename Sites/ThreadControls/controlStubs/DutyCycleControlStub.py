@@ -6,7 +6,7 @@ from Collections.ProfileInstance import ProfileInstance
 from Logging.Logging import Logging
 from ThreadControls.controlStubs.HelperFuctions.dutyCycleFunctions import check_active_duty_cycle, \
     ending_active_profile, \
-    active_profile_setup, duty_cycle_update, check_hold, ln2_update
+    active_profile_setup, duty_cycle_update, check_hold, ln2_update, turn_off_heat
 from ThreadControls.SafetyCheckHelperFunctions import enter_safe_mode, log_event
 
 
@@ -68,8 +68,13 @@ class DutyCycleControlStub(Thread):
                 # end of test
                 ending_active_profile()
             else:
+                Logging.logEvent("Debug", "Status Update",
+                                 {"message": "INFO: Not in Active Profile and Operational Vacuum. Turning off Heat in system.",
+                                  "level": 2})
                 # Sleeping so it doesn't busy wait
-                time.sleep(1)
+                turn_off_heat()
+
+                time.sleep(pi.update_period)
             # end of running check
         # end of outer while True
     # end of run()

@@ -402,6 +402,8 @@ def update_all_duty_cycles(pi):
         zone = pi.zone_dict[zone]
         if zone.active_zone_profile and zone.temp_temperature:
             zone.calculate_duty_cycle(pi)
+        else:
+            zone.turn_off_heat_in_zone()
         if len(pi.expected_time_values) <= 0:
             break
         #end if
@@ -479,13 +481,12 @@ def turn_off_heat():
     # turning off lamps at the end of test
     for zone in pi.zone_dict:
         zone = pi.zone_dict[zone]
-        if zone.active_zone_profile:
-            if zone.lamps:
-                d_out = HardwareStatusInstance.getInstance().pc_104.digital_out
-                d_out.update({zone.lamps[1] + " PWM DC": 0})
-                d_out.update({zone.lamps[0] + " PWM DC": 0})
-            else:
-                HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Platen Duty Cycle', 0])
+        if zone.lamps:
+            d_out = HardwareStatusInstance.getInstance().pc_104.digital_out
+            d_out.update({zone.lamps[1] + " PWM DC": 0})
+            d_out.update({zone.lamps[0] + " PWM DC": 0})
+        else:
+            HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Platen Duty Cycle', 0])
 
 
 def ending_active_profile():

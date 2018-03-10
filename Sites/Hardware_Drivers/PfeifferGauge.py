@@ -80,6 +80,9 @@ def convert_pressure_to_str(pressure, in_torr=True):
 
 def send_receive(pi_socket, address, parm=349, data_str=None):
     ip = '192.168.99.124'
+    pi_socket = socket(AF_INET, SOCK_DGRAM)
+    # TODO Research this timeout time
+    pi_socket.settimeout(5)
 
     if data_str is None:
         str_to_send = gen_cmd_read(address, parm).encode()
@@ -113,7 +116,7 @@ class PfeifferGauge:
     def __init__(self):
         self.pi_socket = socket(AF_INET, SOCK_DGRAM)
         # TODO Research this timeout time
-        self.pi_socket.settimeout(.5)
+        self.pi_socket.settimeout(5)
 
 
     # TODO: Why is this not used on pressure gauge 3

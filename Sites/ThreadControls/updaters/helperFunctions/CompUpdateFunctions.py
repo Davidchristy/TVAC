@@ -43,18 +43,21 @@ def initialize_shi_compressor(compressor):
         item = "Shi Compressor"
         error_details = "ERROR: {}: There has been an error with the {} ({})".format(item, item, e)
         log_hw_error(pi=pi, item=item, error_details=error_details)
+        error = True
     except TimeoutError as e:
         HardwareStatusInstance.getInstance().shi_compressor_power = False
         item = "Shi Compressor"
         error_details = "ERROR: {}: There has been a Timeout error with the {} ({})".format(item, item, e)
         log_hw_error(pi=pi, item=item, error_details=error_details)
+        error = True
     else:
         HardwareStatusInstance.getInstance().shi_compressor_power = True
+        error = False
 
     comp_next_uptime_read = time.time()
     comp_next_status_read = time.time()
 
-    return comp_next_uptime_read, comp_next_status_read
+    return error, comp_next_uptime_read, comp_next_status_read
 
 
 def shi_compressor_update(compressor, comp_next_uptime_read,
@@ -90,15 +93,18 @@ def shi_compressor_update(compressor, comp_next_uptime_read,
         item = "Shi Compressor"
         error_details = "ERROR: {}: There has been an error with the {} ({})".format(item, item, e)
         log_hw_error(pi=pi, item=item, error_details=error_details)
+        error = True
     except TimeoutError as e:
         HardwareStatusInstance.getInstance().shi_compressor_power = False
         item = "Shi Compressor"
         error_details = "ERROR: {}: There has been a Timeout error with the {} ({})".format(item, item, e)
         log_hw_error(pi=pi, item=item, error_details=error_details)
+        error = True
     else:
         HardwareStatusInstance.getInstance().shi_compressor_power = True
+        error = False
 
-    return comp_next_uptime_read, comp_next_status_read
+    return error, comp_next_uptime_read, comp_next_status_read
 
 def process_compressor_cmd(cmd, compressor):
     if 'on' == cmd:
