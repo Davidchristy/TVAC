@@ -27,6 +27,7 @@ class ProfileInstance:
             self.record_data = False
             self.active_profile = False
             self.vacuum_wanted = False
+            self.vacuum_obtained = False
 
             self.profile_name = None
             self.profile_uuid = None
@@ -59,7 +60,7 @@ class ProfileInstance:
         self.vacuum_wanted = True if result["vacuum_wanted"] else False
         self.current_setpoint = result["setpoint"]
 
-    def rebuild_zone(self):
+    def rebuild_zones(self):
         self.zone_dict = self.build_zone_collection()
 
     def build_zone_collection(self):
@@ -73,7 +74,7 @@ class ProfileInstance:
                 "zone8": ZoneProfileContract(name='zone8', lamps=['IR Lamp 15', 'IR Lamp 16'], pi=self),
                 "zone9": ZoneProfileContract(name='zone9', lamps=None, pi=self)}
 
-    def load_profile(self, profile_name, profileStartTime=None, thermal_start_time=None):
+    def load_profile(self, profile_name, profile_start_time=None, thermal_start_time=None):
         """
         This will take a profile loaded in the DB and put it in RAM
         If this is a pre existing profile we are loading after reboot, a startTime will be given
@@ -81,7 +82,7 @@ class ProfileInstance:
         """
         if thermal_start_time:
             Logging.debug_print(2, "Loading profile {}:\tpst: {}\ttst: {}".format(profile_name,
-                                                                                  profileStartTime,
+                                                                                  profile_start_time,
                                                                                   time.mktime(
                                                                                                thermal_start_time.timetuple()
                                                                                            )))
@@ -97,7 +98,7 @@ class ProfileInstance:
 
             self.profile_uuid = uuid.uuid4()
             self.profile_name = profile_name
-            self.profile_start_time = profileStartTime
+            self.profile_start_time = profile_start_time
             self.thermal_start_time = thermal_start_time
 
             Logging.debug_print(2, "Loaded profile: {}".format(profile_name))
@@ -109,6 +110,40 @@ class ProfileInstance:
                 self.zone_dict[zone_name].update(zone_profile)
                 self.zone_dict[zone_name].active_zone_profile = True
 
+                print("Profile Name: {}".format(self.profile_name))
+                for zone in self.zone_dict:
+                    zone = self.zone_dict[zone]
+                    if zone.active_zone_profile:
+                        print("{}: Active".format(zone.name))
+                        print("{}: Average: {}".format(zone.name, zone.average))
+                        print("{}: Thermocouples: {}".format(zone.name, zone.thermocouples))
+                        print("{}: ThermalProfiles:".format(zone.name))
+                        if zone.thermalProfiles:
+                            for tp in zone.thermalProfiles:
+                                print("\t{}: set point: {}".format(zone.name, tp.thermalsetpoint))
+                                print("\t{}: temp goal: {}".format(tp.thermalsetpoint, tp.tempGoal))
+                                print("\t{}: soak duration: {}".format(tp.thermalsetpoint, tp.soakduration))
+                                print("\t{}: ramp: {}".format(tp.thermalsetpoint, tp.ramp))
+                        print("{}: maxHeatError: {}".format(zone.name, zone.maxHeatError))
+                        print("{}: minHeatError: {}".format(zone.name, zone.minHeatError))
+                        print("{}: maxHeatPerMin: {}".format(zone.name, zone.maxHeatPerMin))
+                        print("")
+
+                    else:
+                        print("{}: Inactive".format(zone.name))
+                        print("{}: Average: {}".format(zone.name, zone.average))
+                        print("{}: Thermocouples: {}".format(zone.name, zone.thermocouples))
+                        print("{}: ThermalProfiles:".format(zone.name))
+                        if zone.thermalProfiles:
+                            for tp in zone.thermalProfiles:
+                                print("\t{}: set point: {}".format(zone.name, tp.thermalsetpoint))
+                                print("\t{}: temp goal: {}".format(tp.thermalsetpoint, tp.tempGoal))
+                                print("\t{}: soak duration: {}".format(tp.thermalsetpoint, tp.soakduration))
+                                print("\t{}: ramp: {}".format(tp.thermalsetpoint, tp.ramp))
+                        print("{}: maxHeatError: {}".format(zone.name, zone.maxHeatError))
+                        print("{}: minHeatError: {}".format(zone.name, zone.minHeatError))
+                        print("{}: maxHeatPerMin: {}".format(zone.name, zone.maxHeatPerMin))
+                        print("")
 
             return "{'result':'success'}"
         except Exception as e:

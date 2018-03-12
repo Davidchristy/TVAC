@@ -108,15 +108,19 @@ def initialize_shi_mcc(mcc):
         # starting the helper thread to read the fifo file
         mcc.open_port()
 
+        while hw.pc_104.digital_out.getVal('CryoP Pwr Relay 1') is None:
+            time.sleep(.5)
+
         # Checks to see if the MCC is currently powered,
         currently_powered = hw.pc_104.digital_out.getVal('MCC2 Power')
+
 
         # If it isn't it turns on.
         # TODO: Turn this into loop
         print("about to wait for MCC to turn on")
         hw.pc_104.digital_out.update({'MCC2 Power': True})
         if not currently_powered:
-            time.sleep(1)
+            time.sleep(2)
 
         # This is here to clear any old data that might be in the port, waiting for .2 seconds to allow for HW to reply
         mcc.flush_port(.2)
@@ -179,8 +183,12 @@ def shi_mcc_update(mcc, next_param_read_time, mcc_param_period, mcc_status_read_
             val = mcc.get_param_values()
             hw.shi_cryopump.update_shi_cryopump({'MCC Params': val['Response']})
 
+        Logging.logEvent("Debug", "Status Update",
+                         {"message": "Current MCC commands: ({})".format(hw.shi_mcc_cmds),
+                          "level": 2})
 
         while len(hw.shi_mcc_cmds):
+
             cmd = hw.shi_mcc_cmds.pop()
             process_mcc_cmd(cmd, mcc)
 

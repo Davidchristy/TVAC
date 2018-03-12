@@ -73,7 +73,7 @@ def run_profile():
     if not HardwareStatusInstance.getInstance().pc_104.digital_in.chamber_closed:
         return "{'error':'{}'}".format("Door is open")
 
-    # If the shourd heaters are on, turn them off when starting a profile
+    # If the shroud heaters are on, turn them off when starting a profile
     HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Shroud Duty Cycle', 0])
     HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Disable Shroud Output'])
     pi = ProfileInstance.getInstance()
@@ -253,11 +253,10 @@ def stop_roughing_pump():
 def stop_cryopump():
     pi = ProfileInstance.getInstance()
     hw = HardwareStatusInstance.getInstance()
-    sql_str = "UPDATE System_Status SET vacuum_wanted=0;"
     try:
         if not pi.active_profile:
-            insert_into_sql(sql_str=sql_str)
-            pi.vacuum_wanted = False
+            ProfileHelperFunctions.set_vacuum_wanted(pi, False)
+
             hw.pc_104.digital_out.update({'CryoP GateValve': False})
 
             time.sleep(5)
@@ -268,7 +267,6 @@ def stop_cryopump():
         else:
             return "{'result':'Not Changed: Active Profile Running.'}"
     except Exception as e:
-        Logging.debug_print(3, "sql: {}".format(sql_str))
         Logging.debug_print(1, "Error in ThreadCollection, holdThread: {}".format(str(e)))
         return "{'error':'{}'}".format(e)
 
@@ -276,34 +274,28 @@ def stop_cryopump():
 def stop_cryopumping_chamber():
     pi = ProfileInstance.getInstance()
     hw = HardwareStatusInstance.getInstance()
-    sql_str = "UPDATE System_Status SET vacuum_wanted=0;"
     try:
         if not pi.active_profile:
-            insert_into_sql(sql_str=sql_str)
+            ProfileHelperFunctions.set_vacuum_wanted(pi, False)
             hw.pc_104.digital_out.update({'CryoP GateValve': False})
-            pi.vacuum_wanted = False
+
             return "{'result':'success'}"
         else:
             return "{'result':'Not Changed: Active Profile Running.'}"
     except Exception as e:
-        Logging.debug_print(3, "sql: {}".format(sql_str))
         Logging.debug_print(1, "Error in ThreadCollection, holdThread: {}".format(str(e)))
         return "{'error':'{}'}".format(e)
 
 
 def vacuum_not_needed():
     pi = ProfileInstance.getInstance()
-    sql_str = "UPDATE System_Status SET vacuum_wanted=0;"
     try:
         if not pi.active_profile:
-            insert_into_sql(sql_str=sql_str)
-
-            pi.vacuum_wanted = False
+            ProfileHelperFunctions.set_vacuum_wanted(pi, False)
             return "{'result':'success'}"
         else:
             return "{'result':'Not Changed: Active Profile Running.'}"
     except Exception as e:
-        Logging.debug_print(3, "sql: {}".format(sql_str))
         Logging.debug_print(1, "Error in ThreadCollection, holdThread: {}".format(str(e)))
         return "{'error':'{}'}".format(e)
 
@@ -343,14 +335,13 @@ def get_all_thermocouple_data():
 
 
 def put_under_vacuum():
-    if HardwareStatusInstance.getInstance().pc_104.digital_in.chamber_closed:
-        sql_str = "UPDATE System_Status SET vacuum_wanted=1;"
+    pi = ProfileInstance.getInstance()
+    hw = HardwareStatusInstance.getInstance()
+    if hw.pc_104.digital_in.chamber_closed:
         try:
-            insert_into_sql(sql_str=sql_str)
-            ProfileInstance.getInstance().vacuum_wanted = True
+            ProfileHelperFunctions.set_vacuum_wanted(pi, True)
             return "{'result':'success'}"
         except Exception as e:
-            Logging.debug_print(3, "sql: {}".format(sql_str))
             Logging.debug_print(1, "Error in ThreadCollection, holdThread: {}".format(str(e)))
             return "{'error':'{}'}".format(e)
     else:

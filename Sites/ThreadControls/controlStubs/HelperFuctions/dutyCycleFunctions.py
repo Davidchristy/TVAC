@@ -2,7 +2,8 @@ import datetime, time
 import ThreadControls.ThreadHelperFunctions
 
 from Collections.ProfileInstance import ProfileInstance
-from Logging.Logging import Logging, insert_into_sql, sql_fetch_one, sql_fetch_all
+from Collections.ProfileHelperFunctions import set_vacuum_wanted
+from Logging.Logging import Logging, insert_into_sql, sql_fetch_one
 from Collections.HardwareStatusInstance import HardwareStatusInstance
 
 
@@ -430,7 +431,7 @@ def find_current_set_point(set_points_start_time, current_time):
         i += 1
         if i >= len(set_points_start_time):
             break
-    return 1
+    return i
 
 def check_if_in_ramp(set_points_start_time, current_time, set_point):
     return current_time < set_points_start_time[set_point][1]
@@ -503,9 +504,7 @@ def ending_active_profile():
     for tc in tc_list:
         tc.update({"zone": 0, "userDefined": False})
     pi.active_profile = False
-    pi.vacuum_wanted = False
-    sql_str = "UPDATE System_Status SET vacuum_wanted=0;"
-    insert_into_sql(sql_str=sql_str)
+    set_vacuum_wanted(pi, False)
 
     pi.rebuild_zones()
 
@@ -545,10 +544,7 @@ def active_profile_setup(pi, hw):
     hw.pc_104.digital_out.update({'LN2-S Sol': False, 'LN2-P Sol': False})
 
 def duty_cycle_update(pi, current_time):
-    # if there is no more expected time values, end the active profile
-    if len(pi.expected_time_values) <= 0:
-        pi.active_profile = False
-        return
+
 
 
     updates = find_num_of_updates_passed(pi.expected_time_values, current_time)
@@ -559,7 +555,8 @@ def duty_cycle_update(pi, current_time):
     ramp_temporary = check_if_in_ramp(pi.set_points_start_time, current_time, current_set_point)
     soak_temporary = not ramp_temporary
 
-
+    Logging.logEvent("Debug", "Status Update",
+                     {"message": "DCCS: Now in Set point {}, ramp: {}".format(current_set_point, ramp_temporary), "level": 2})
 
     update_set_point_state(current_set_point, ramp_temporary, soak_temporary)
     # With the temp goal temperature picked, make the duty cycle
@@ -582,7 +579,7 @@ def ln2_update(pi, hw):
 
     if shroud_current_duty_cycle_min and shroud_current_duty_cycle_min < shroud_ln2_duty_cycle_max:
         # Throw the safety Valve open
-        hw.digital_out.update({'LN2-S Sol': True})
+        hw.pc_104.digital_out.update({'LN2-S Sol': True})
 
         # Calculate the percent the valve should be open
         valve_percent_open = (shroud_current_duty_cycle_min - shroud_ln2_duty_cycle_max) / (shroud_ln2_duty_cycle_min - shroud_ln2_duty_cycle_max)
@@ -593,13 +590,13 @@ def ln2_update(pi, hw):
 
         valve_literal = valve_percent_open * valve_literal_max
 
-        hw.analog_out.update({'LN2 Shroud': valve_literal})
+        hw.pc_104.analog_out.update({'LN2 Shroud': valve_literal})
     else:
-        hw.digital_out.update({'LN2-S Sol': False})
-        hw.analog_out.update({'LN2 Shroud': 0})
+        hw.pc_104.digital_out.update({'LN2-S Sol': False})
+        hw.pc_104.analog_out.update({'LN2 Shroud': 0})
 
     if platen_duty and platen_duty < platen_ln2_duty_cycle_max:
-        hw.digital_out.update({'LN2-P Sol': True})
+        hw.pc_104.digital_out.update({'LN2-P Sol': True})
 
         # Calculate the percent the valve should be open
         valve_percent_open = (platen_duty - platen_ln2_duty_cycle_max) / (platen_ln2_duty_cycle_min - platen_ln2_duty_cycle_max)
@@ -610,10 +607,10 @@ def ln2_update(pi, hw):
 
         valve_literal = valve_percent_open * valve_literal_max
 
-        hw.analog_out.update({'LN2 Platen': valve_literal})
+        hw.pc_104.analog_out.update({'LN2 Platen': valve_literal})
     else:
-        hw.digital_out.update({'LN2-P Sol': False, })
-        hw.analog_out.update({'LN2 Platen': 0})
+        hw.pc_104.digital_out.update({'LN2-P Sol': False, })
+        hw.pc_104.analog_out.update({'LN2 Platen': 0})
 
 
 def find_lowest_shroud_duty_cycle(pi):

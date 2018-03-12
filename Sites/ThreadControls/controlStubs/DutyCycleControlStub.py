@@ -39,6 +39,11 @@ class DutyCycleControlStub(Thread):
                     while pi.active_profile and hw.operational_vacuum:
                         current_time = time.time()
 
+                        # if there is no more expected time values, end the active profile
+                        if len(pi.expected_time_values) <= 0:
+                            pi.active_profile = False
+                            return
+
                         check_hold(pi=pi)
 
                         # If profile aborted in active profile, leave here

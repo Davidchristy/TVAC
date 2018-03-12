@@ -18,15 +18,11 @@ class VerbHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         """Respond to a GET request."""
         Logging.logEvent("Debug","Status Update",
-            {"message": "Received GET Request",
+            {"message": "Received GET Request: {}".format(self.path),
              "level":1})
         path="NULL"
         try:
             path = self.path
-
-            Logging.logEvent("Debug","Status Update",
-                {"message": "GET Request Path: {}".format(path),
-                 "level":2})
 
             # Based on the path we are given, do different functions
             result = {
@@ -64,9 +60,6 @@ class VerbHandler(http.server.BaseHTTPRequestHandler):
                 "/getSqlData":GetControl.get_sql_data,
                 }[path]()
 
-            Logging.logEvent("Debug","Status Update",
-                {"message": "Sending GET Results",
-                 "level":1})
             Logging.logEvent("Debug","Status Update",
                 {"message": "GET Results: {}".format(str(result).encode()),
                  "level": 5})

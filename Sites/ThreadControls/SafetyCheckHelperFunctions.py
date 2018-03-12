@@ -223,12 +223,12 @@ def log_hw_error(pi, item, error_details):
     pi.active_profile = False
 
 
-def test_if_left_vacuum_while_in_active_profile(hw, pi, temp_error_dict):
+def test_if_left_vacuum_while_vacuum_wanted(hw, pi, temp_error_dict):
     # TODO: operational_vacuum can't be updated if there isn't an active profile...this needs to change
     try:
         current_pressure = hw.pfeiffer_gauges.get_chamber_pressure()
 
-        if current_pressure and current_pressure > 1e-4 and pi.active_profile:
+        if current_pressure and current_pressure > 1e-4 and pi.vacuum_obtained:
             error_detail = "Chamber Pressure is above Operational Vacuum ({}) while in active profile".format(current_pressure)
             error = {
                 "time": str(datetime.datetime.now()),
@@ -260,10 +260,10 @@ def test_thermocouples_for_errors(MAX_OPERATING_TEMP, MAX_TOUCH_TEMP, MIN_TOUCH_
 
         if tc.userDefined and tc.zone != 0:
             test_if_tc_is_over_user_defined_max(tc, temp_error_dict,
-                                                pi.zone_dict[tc.name].maxHeatError)
+                                                pi.zone_dict["zone{}".format(tc.zone)].maxHeatError)
 
             test_if_tc_is_under_user_defined_min(tc, temp_error_dict,
-                                                 pi.zone_dict[tc.name].minHeatError)
+                                                 pi.zone_dict["zone{}".format(tc.zone)].minHeatError)
         # end of user test
 
         # Get the full list

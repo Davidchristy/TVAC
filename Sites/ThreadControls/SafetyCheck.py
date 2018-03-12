@@ -5,7 +5,7 @@ from Collections.HardwareStatusInstance import HardwareStatusInstance
 from Collections.ProfileInstance import ProfileInstance
 from Logging.Logging import Logging
 from ThreadControls.SafetyCheckHelperFunctions import power_failure, enter_safe_mode, log_event, \
-    log_removed_tcs, test_if_left_vacuum_while_in_active_profile, test_thermocouples_for_errors
+    log_removed_tcs, test_if_left_vacuum_while_vacuum_wanted, test_thermocouples_for_errors
 
 
 class SafetyCheck(Thread):
@@ -96,7 +96,7 @@ class SafetyCheck(Thread):
 
                     self.errorDict = temp_error_dict
 
-                    test_if_left_vacuum_while_in_active_profile(hw, pi, temp_error_dict)
+                    test_if_left_vacuum_while_vacuum_wanted(hw, pi, temp_error_dict)
 
                     time.sleep(self.SLEEP_TIME)
             # end of inner while true loop

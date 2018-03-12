@@ -44,15 +44,8 @@ class HardwareStatusInstance:
 
             # System Wide Stats
 
-            # TODO: Take out this check, but first see what actions it might cause
-            if os.name == "posix":
-                user_name = os.environ['LOGNAME']
-            else:
-                user_name = "user"
-            if "root" in user_name:
-                self.operational_vacuum = False
-            else:
-                self.operational_vacuum = True
+            self.operational_vacuum = False
+
             self.vacuum_state = None
 
             # Set to power to be true on all devices, if they are fault, it will tell switch to False

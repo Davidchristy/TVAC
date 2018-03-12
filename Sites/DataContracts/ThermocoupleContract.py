@@ -47,23 +47,23 @@ class ThermocoupleContract:
         self.__lock.release()
         return temp
 
-    def getWorking():
-        self.__lock.acquire()
-        tmp = self.working 
-        self.__lock.release()
-        return tmp
-
-    def getTime():
-        self.__lock.acquire()
-        tmp = self. time
-        self.__lock.release()
-        return tmp
-
-    def getAlarm():
-        self.__lock.acquire()
-        tmp = self. alarm
-        self.__lock.release()
-        return tmp
+    # def getWorking():
+    #     self.__lock.acquire()
+    #     tmp = self.working
+    #     self.__lock.release()
+    #     return tmp
+    #
+    # def getTime():
+    #     self.__lock.acquire()
+    #     tmp = self. time
+    #     self.__lock.release()
+    #     return tmp
+    #
+    # def getAlarm():
+    #     self.__lock.acquire()
+    #     tmp = self. alarm
+    #     self.__lock.release()
+    #     return tmp
 
 
     def getJson(self, temp_units = 'K'):

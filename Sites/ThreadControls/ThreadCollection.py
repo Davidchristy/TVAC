@@ -7,7 +7,9 @@ from ThreadControls.updaters.PfeifferGaugeUpdater import PfeifferGaugeUpdater
 from ThreadControls.updaters.hardwareUpdater import HardwareUpdater
 from ThreadControls.updaters.TsRegistersUpdater import TsRegistersUpdater
 import Collections.ProfileHelperFunctions as ProfileHelperFunctions
-
+from Collections.HardwareStatusInstance import HardwareStatusInstance
+import time, datetime
+from ThreadControls.controlStubs.HelperFuctions.dutyCycleFunctions import ending_active_profile
 class ThreadCollection:
 
     # noinspection PyTypeChecker
@@ -27,14 +29,25 @@ class ThreadCollection:
             active_profile_present = False
         Logging.debug_print(3, "Active Profile?: {}".format(active_profile_present))
         if active_profile_present:
+
             Logging.debug_print(1, "Unfinished profile found: {}".format(str(result['profile_name'])))
+            while HardwareStatusInstance.getInstance().operational_vacuum is None:
+                print("Waiting on Operational Vacuum to be discovered, in Thread Collection")
+                time.sleep(1)
 
-            # load up ram (zone collection) with info from the database and the given start time
-            pi.load_profile(result['profile_name'], result['profile_Start_Time'],
-                            result['thermal_Start_Time'])
+            if HardwareStatusInstance.getInstance().operational_vacuum:
+                # load up ram (zone collection) with info from the database and the given start time
+                pi.load_profile(result['profile_name'], result['profile_Start_Time'],
+                                result['thermal_Start_Time'])
 
-            # after it's in memory, run it!
-            ProfileHelperFunctions.run_profile(pi=pi, first_start = False)
+                # after it's in memory, run it!
+                ProfileHelperFunctions.run_profile(pi=pi, first_start = False)
+            else:
+                Logging.logEvent("Event", "Program Starting with active profile, and not in operational vacuum. Ending Profile.",
+                                 {'time': datetime.time(),
+                                  "message": pi.profile_name,
+                                  "ProfileInstance": ProfileInstance.getInstance()})
+                ending_active_profile()
         # end if no active profile
     #end of function 
 

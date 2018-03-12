@@ -6,6 +6,16 @@ import pymysql
 _mySqlConnect = MySQlConnect()
 _sql_lock = threading.Lock()
 
+def insert_debug_into_sql(sql_str):
+    with _sql_lock:
+        try:
+            mysql = _mySqlConnect
+            mysql.cur.execute(sql_str)
+            mysql.conn.commit()
+        except Exception as e:
+            pass
+
+
 def insert_into_sql(sql_str):
     with _sql_lock:
         try:
@@ -102,7 +112,7 @@ class Logging(object):
 
                 sql_str = "INSERT INTO tvac.Debug {} VALUES {};".format(coloums, values)
 
-                insert_into_sql(sql_str=sql_str)
+                insert_debug_into_sql(sql_str=sql_str)
 
                 for line in string.split("\n"):
                     print("{}{}".format(prefix,line))

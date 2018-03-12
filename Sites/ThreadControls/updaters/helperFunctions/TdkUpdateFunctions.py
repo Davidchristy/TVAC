@@ -107,10 +107,10 @@ def process_tkd_lambda_command(cmd, tdk_lambda):
         # Not used
         'Enable Platen Output',
         # not used
-        'Enable Shroud Output'
+        'Enable Shroud Output',
         'Setup Platen',
         'Setup Shroud',
-        'Disable All Output'
+        'Disable All Output',
         'Disable Platen Output',
         'Disable Shroud Output',
         'Platen Duty Cycle',

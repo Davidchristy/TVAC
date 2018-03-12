@@ -185,12 +185,21 @@ def run_profile(pi, first_start = True):
         add_profile_instance_to_db(pi)
 
     pi.active_profile = True
-    pi.vacuum_wanted = True
-    sql_str = "UPDATE System_Status SET vacuum_wanted=1;"
-    insert_into_sql(sql_str=sql_str)
+    set_vacuum_wanted(pi, True)
     Logging.debug_print(2, "Setting Active Profile to True")
 
     return "{'result':'success'}"
+
+
+def set_vacuum_wanted(pi, wanted):
+    pi.vacuum_wanted = wanted
+    if wanted:
+        wanted_str = "1"
+    else:
+        wanted_str = "0"
+        pi.vacuum_obtained = False
+    sql_str = "UPDATE System_Status SET vacuum_wanted={};".format(wanted_str)
+    insert_into_sql(sql_str=sql_str)
 
 
 def return_active_profile():
