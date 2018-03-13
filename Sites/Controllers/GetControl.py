@@ -6,6 +6,7 @@ from Collections.HardwareStatusInstance import HardwareStatusInstance
 from ThreadControls.ThreadCollectionInstance import ThreadCollectionInstance
 import ThreadControls.ThreadHelperFunctions
 import Collections.ProfileHelperFunctions as ProfileHelperFunctions
+import ThreadControls.controlStubs.HelperFuctions.dutyCycleFunctions as dutyCycleFunctions
 
 from Logging.Logging import Logging, insert_into_sql
 
@@ -170,10 +171,14 @@ def get_shi_temps():
 
 def hard_stop():
     hw = HardwareStatusInstance.getInstance()
+    pi = ProfileInstance.getInstance()
     try:
+        if not pi.active_profile:
+            return {'result': '{}'.format("You can not stop a profile while a profile is not running.")}
+
         Logging.debug_print(1, "Hard stop has been called")
         d_out = hw.pc_104.digital_out
-        ProfileInstance.getInstance().active_profile = False
+        pi.active_profile = False
         d_out.update({"IR Lamp 1 PWM DC": 0})
         d_out.update({"IR Lamp 2 PWM DC": 0})
         d_out.update({"IR Lamp 3 PWM DC": 0})
@@ -195,8 +200,9 @@ def hard_stop():
         hw.tdk_lambda_cmds.append(['Platen Duty Cycle', 0])
         hw.tdk_lambda_cmds.append(['Shroud Duty Cycle', 0])
         Logging.logEvent("Event","Profile",
-            {"message": "Profile Halted:",
+            {"message": "Profile {} Halted:".format(pi.name),
             "ProfileInstance": ProfileInstance.getInstance()})
+        dutyCycleFunctions.ending_active_profile(already_logged=True)
         return {'result':'success'}
     except Exception as e:
         return {'result':'{}'.format(e)}

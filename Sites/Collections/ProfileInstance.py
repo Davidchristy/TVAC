@@ -110,40 +110,40 @@ class ProfileInstance:
                 self.zone_dict[zone_name].update(zone_profile)
                 self.zone_dict[zone_name].active_zone_profile = True
 
-                print("Profile Name: {}".format(self.profile_name))
-                for zone in self.zone_dict:
-                    zone = self.zone_dict[zone]
-                    if zone.active_zone_profile:
-                        print("{}: Active".format(zone.name))
-                        print("{}: Average: {}".format(zone.name, zone.average))
-                        print("{}: Thermocouples: {}".format(zone.name, zone.thermocouples))
-                        print("{}: ThermalProfiles:".format(zone.name))
-                        if zone.thermalProfiles:
-                            for tp in zone.thermalProfiles:
-                                print("\t{}: set point: {}".format(zone.name, tp.thermalsetpoint))
-                                print("\t{}: temp goal: {}".format(tp.thermalsetpoint, tp.tempGoal))
-                                print("\t{}: soak duration: {}".format(tp.thermalsetpoint, tp.soakduration))
-                                print("\t{}: ramp: {}".format(tp.thermalsetpoint, tp.ramp))
-                        print("{}: maxHeatError: {}".format(zone.name, zone.maxHeatError))
-                        print("{}: minHeatError: {}".format(zone.name, zone.minHeatError))
-                        print("{}: maxHeatPerMin: {}".format(zone.name, zone.maxHeatPerMin))
-                        print("")
+            print("Profile Name: {}".format(self.profile_name))
+            for zone in self.zone_dict:
+                zone = self.zone_dict[zone]
+                if zone.active_zone_profile:
+                    print("{}: Active".format(zone.name))
+                    print("{}: Average: {}".format(zone.name, zone.average))
+                    print("{}: Thermocouples: {}".format(zone.name, zone.thermocouples))
+                    print("{}: ThermalProfiles:".format(zone.name))
+                    if zone.thermalProfiles:
+                        for tp in zone.thermalProfiles:
+                            print("\t{}: set point: {}".format(zone.name, tp.thermalsetpoint))
+                            print("\t{}: temp goal: {}".format(tp.thermalsetpoint, tp.tempGoal))
+                            print("\t{}: soak duration: {}".format(tp.thermalsetpoint, tp.soakduration))
+                            print("\t{}: ramp: {}".format(tp.thermalsetpoint, tp.ramp))
+                    print("{}: maxHeatError: {}".format(zone.name, zone.maxHeatError))
+                    print("{}: minHeatError: {}".format(zone.name, zone.minHeatError))
+                    print("{}: maxHeatPerMin: {}".format(zone.name, zone.maxHeatPerMin))
+                    print("")
 
-                    else:
-                        print("{}: Inactive".format(zone.name))
-                        print("{}: Average: {}".format(zone.name, zone.average))
-                        print("{}: Thermocouples: {}".format(zone.name, zone.thermocouples))
-                        print("{}: ThermalProfiles:".format(zone.name))
-                        if zone.thermalProfiles:
-                            for tp in zone.thermalProfiles:
-                                print("\t{}: set point: {}".format(zone.name, tp.thermalsetpoint))
-                                print("\t{}: temp goal: {}".format(tp.thermalsetpoint, tp.tempGoal))
-                                print("\t{}: soak duration: {}".format(tp.thermalsetpoint, tp.soakduration))
-                                print("\t{}: ramp: {}".format(tp.thermalsetpoint, tp.ramp))
-                        print("{}: maxHeatError: {}".format(zone.name, zone.maxHeatError))
-                        print("{}: minHeatError: {}".format(zone.name, zone.minHeatError))
-                        print("{}: maxHeatPerMin: {}".format(zone.name, zone.maxHeatPerMin))
-                        print("")
+                else:
+                    print("{}: Inactive".format(zone.name))
+                    print("{}: Average: {}".format(zone.name, zone.average))
+                    print("{}: Thermocouples: {}".format(zone.name, zone.thermocouples))
+                    print("{}: ThermalProfiles:".format(zone.name))
+                    if zone.thermalProfiles:
+                        for tp in zone.thermalProfiles:
+                            print("\t{}: set point: {}".format(zone.name, tp.thermalsetpoint))
+                            print("\t{}: temp goal: {}".format(tp.thermalsetpoint, tp.tempGoal))
+                            print("\t{}: soak duration: {}".format(tp.thermalsetpoint, tp.soakduration))
+                            print("\t{}: ramp: {}".format(tp.thermalsetpoint, tp.ramp))
+                    print("{}: maxHeatError: {}".format(zone.name, zone.maxHeatError))
+                    print("{}: minHeatError: {}".format(zone.name, zone.minHeatError))
+                    print("{}: maxHeatPerMin: {}".format(zone.name, zone.maxHeatPerMin))
+                    print("")
 
             return "{'result':'success'}"
         except Exception as e:

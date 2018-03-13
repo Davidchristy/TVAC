@@ -193,8 +193,7 @@ def log_removed_tcs(hw):
                 "event": "Thermocouple {} Disconnected".format(tc.Thermocouple),
                 "item": "Thermocouple",
                 "itemID": tc.Thermocouple,
-                "details": "Thermocouple(s) lost: {}".format(
-                    list(tc.Thermocouple for tc in hw.thermocouples.recently_disconnected)),
+                "details": "Thermocouple {} lost".format(tc.Thermocouple),
                 "actions": ["Log Event"]
             }
             print("TC {} has been removed".format(tc.Thermocouple))

@@ -4,31 +4,8 @@ from Collections.HardwareStatusInstance import HardwareStatusInstance
 from DataContracts.ThermalProfileContract import ThermalProfileContract
 from PID.PID import PID
 from Logging.Logging import Logging, insert_into_sql
+from ThreadControls.SafetyCheckHelperFunctions import enter_safe_mode
 
-
-def enter_safe_mode(error_mesg, pi):
-    pi.active_profile = False
-    Logging.debug_print(1, error_mesg)
-    print(error_mesg)
-    d_out = HardwareStatusInstance.getInstance().pc_104.digital_out
-    d_out.update({"IR Lamp 1 PWM DC": 0})
-    d_out.update({"IR Lamp 2 PWM DC": 0})
-    d_out.update({"IR Lamp 3 PWM DC": 0})
-    d_out.update({"IR Lamp 4 PWM DC": 0})
-    d_out.update({"IR Lamp 5 PWM DC": 0})
-    d_out.update({"IR Lamp 6 PWM DC": 0})
-    d_out.update({"IR Lamp 7 PWM DC": 0})
-    d_out.update({"IR Lamp 8 PWM DC": 0})
-    d_out.update({"IR Lamp 9 PWM DC": 0})
-    d_out.update({"IR Lamp 10 PWM DC": 0})
-    d_out.update({"IR Lamp 11 PWM DC": 0})
-    d_out.update({"IR Lamp 12 PWM DC": 0})
-    d_out.update({"IR Lamp 13 PWM DC": 0})
-    d_out.update({"IR Lamp 14 PWM DC": 0})
-    d_out.update({"IR Lamp 15 PWM DC": 0})
-    d_out.update({"IR Lamp 16 PWM DC": 0})
-    HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Shroud Duty Cycle', 0])
-    HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Platen Duty Cycle', 0])
 
 def log_expected_temperature_data(data, pi):
     '''
@@ -214,7 +191,7 @@ class ZoneProfileContract:
         #                                                            self.duty_cycle))
 
         if math.isnan(self.getTemp(self.average)):
-            enter_safe_mode("A controlled TC has been removed or is unreadable", pi=pi)
+            enter_safe_mode("A controlled TC has been removed or is unreadable")
             raise RuntimeError("Controlled thermocouple has been lost, setting safe state")
 
 

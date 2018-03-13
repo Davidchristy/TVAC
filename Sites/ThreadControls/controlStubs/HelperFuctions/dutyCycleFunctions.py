@@ -370,32 +370,8 @@ def check_hold(pi, time_func=time.time, hold_func=stay_in_hold, zone_temp_func=g
                       "level":2})
 
     # regenerate expected time, moving things forward to account for hold
-    create_expected_values(pi, get_zone_temp_fun=zone_temp_func, time_func=hold_func)
+    create_expected_values(pi)
 
-
-def enter_safe_mode(error_mesg):
-    ProfileInstance.getInstance().active_profile = False
-    Logging.debug_print(1, error_mesg)
-    print(error_mesg)
-    d_out = HardwareStatusInstance.getInstance().pc_104.digital_out
-    d_out.update({"IR Lamp 1 PWM DC": 0})
-    d_out.update({"IR Lamp 2 PWM DC": 0})
-    d_out.update({"IR Lamp 3 PWM DC": 0})
-    d_out.update({"IR Lamp 4 PWM DC": 0})
-    d_out.update({"IR Lamp 5 PWM DC": 0})
-    d_out.update({"IR Lamp 6 PWM DC": 0})
-    d_out.update({"IR Lamp 7 PWM DC": 0})
-    d_out.update({"IR Lamp 8 PWM DC": 0})
-    d_out.update({"IR Lamp 9 PWM DC": 0})
-    d_out.update({"IR Lamp 10 PWM DC": 0})
-    d_out.update({"IR Lamp 11 PWM DC": 0})
-    d_out.update({"IR Lamp 12 PWM DC": 0})
-    d_out.update({"IR Lamp 13 PWM DC": 0})
-    d_out.update({"IR Lamp 14 PWM DC": 0})
-    d_out.update({"IR Lamp 15 PWM DC": 0})
-    d_out.update({"IR Lamp 16 PWM DC": 0})
-    HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Shroud Duty Cycle', 0])
-    HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Platen Duty Cycle', 0])
 
 
 def update_all_duty_cycles(pi):
@@ -415,6 +391,10 @@ def find_num_of_updates_passed(expected_time_values, current_time):
     i = 0
     while current_time > expected_time_values[i]:
         i += 1
+        # If you are at the end of your profile, hard code it to -1
+        if i >= len(expected_time_values):
+            i = -1
+            break
     return i
 
 
@@ -434,7 +414,7 @@ def find_current_set_point(set_points_start_time, current_time):
     return i
 
 def check_if_in_ramp(set_points_start_time, current_time, set_point):
-    return current_time < set_points_start_time[set_point][1]
+    return current_time < set_points_start_time[set_point-1][1]
 
 
 def shorten_expected_values(pi, updates):
@@ -459,18 +439,17 @@ def check_active_duty_cycle():
 
 def update_set_point_state(current_set_point, ramp_temporary, soak_temporary):
     pi = ProfileInstance.getInstance()
-
+    pi.current_setpoint = current_set_point
     if ramp_temporary == True and pi.in_ramp == False:
-        pi.current_setpoint = current_set_point
         Logging.logEvent("Event", "Profile",
-                         {"message": "Profile {} has entered setpoint {} Ramp".format(
+                         {"message": "Profile {} has entered set point {} Ramp".format(
                              pi.profile_name, current_set_point),
                           "ProfileInstance": pi})
         pi.in_ramp = True
-    if soak_temporary == True and pi.in_soak == False and current_set_point > 1:
+    if soak_temporary == True and pi.in_soak == False:
         Logging.logEvent("Event", "Profile",
-                         {"message": "Profile {} has entered setpoint {} Soak".format(
-                             pi.profile_name, current_set_point - 1),
+                         {"message": "Profile {} has entered set point {} Soak".format(
+                             pi.profile_name, current_set_point),
                           "ProfileInstance": pi})
         pi.in_ramp = False
     pi.in_ramp = ramp_temporary
@@ -482,22 +461,18 @@ def turn_off_heat():
     # turning off lamps at the end of test
     for zone in pi.zone_dict:
         zone = pi.zone_dict[zone]
-        if zone.lamps:
-            d_out = HardwareStatusInstance.getInstance().pc_104.digital_out
-            d_out.update({zone.lamps[1] + " PWM DC": 0})
-            d_out.update({zone.lamps[0] + " PWM DC": 0})
-        else:
-            HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Platen Duty Cycle', 0])
+        zone.turn_off_heat_in_zone()
 
 
-def ending_active_profile():
+def ending_active_profile(already_logged=False):
     pi = ProfileInstance.getInstance()
     hw = HardwareStatusInstance.getInstance()
     turn_off_heat()
-    Logging.logEvent("Event", "End Profile",
-                     {'time': datetime.time(),
-                      "message": pi.profile_name,
-                      "ProfileInstance": ProfileInstance.getInstance()})
+    if already_logged:
+        Logging.logEvent("Event", "End Profile",
+                         {'time': datetime.time(),
+                          "message": pi.profile_name,
+                          "ProfileInstance": ProfileInstance.getInstance()})
     hw.tdk_lambda_cmds.append(['Disable Platen Output', ''])
     update_db_with_end_time()
     tc_list = hw.thermocouples.tc_list
@@ -549,6 +524,11 @@ def duty_cycle_update(pi, current_time):
 
     updates = find_num_of_updates_passed(pi.expected_time_values, current_time)
     update_current_temp_value(pi, updates)
+
+    if updates == -1:
+        pi.active_profile = False
+        return
+
     shorten_expected_values(pi, updates)
 
     current_set_point = find_current_set_point(pi.set_points_start_time, current_time)
