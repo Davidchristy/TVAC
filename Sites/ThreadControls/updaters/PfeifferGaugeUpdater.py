@@ -24,11 +24,11 @@ def log_pressure_data():
     pi = ProfileInstance.getInstance()
     hw = HardwareStatusInstance.getInstance()
     coloums = "( profile_I_ID, guage, pressure, time )"
-    values  = "( \"{}\",{},{},\"{}\" ),\n".format(pi.profile_uuid,
+    values  = "( \"{}\",{},{},\"{}\" ),".format(pi.profile_uuid,
                                                 hw.pfeiffer_gauges.get_cryopump_address(),
                                                 hw.pfeiffer_gauges.get_cryopump_pressure(),
                                                 datetime.datetime.fromtimestamp(time.time()))
-    values += "( \"{}\",{},{},\"{}\" ),\n".format(pi.profile_uuid,
+    values += "( \"{}\",{},{},\"{}\" ),".format(pi.profile_uuid,
                                                 hw.pfeiffer_gauges.get_chamber_address(),
                                                 hw.pfeiffer_gauges.get_chamber_pressure(),
                                                 datetime.datetime.fromtimestamp(time.time()))
@@ -169,7 +169,6 @@ class PfeifferGaugeUpdater(Thread):
             # End try
             except Exception as e:
                 error_details = "Unknown Pressure Gauge Error: ({})".format(e)
-                raise e
                 error_log = {
                     "time": str(datetime.datetime.now()),
                     "event": "P",

@@ -109,6 +109,10 @@ class ShiMcc:
         :return:
         """
 
+        # Quick fix to help MCC recover from power failure.
+        if not response.startswith("$"):
+            response = "$" + response
+
         if len(response) < 4:
             self.port_listener.flush_buffer(2.0)
             print("MCC: Reply from MCC is less than 4 in length: '{}'".format(response.replace('\r', r'\r')))
