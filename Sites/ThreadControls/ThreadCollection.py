@@ -43,9 +43,9 @@ class ThreadCollection:
                 # after it's in memory, run it!
                 ProfileHelperFunctions.run_profile(pi=pi, first_start = False)
             else:
-                Logging.logEvent("Event", "Program Starting with active profile, and not in operational vacuum. Ending Profile.",
+                Logging.logEvent("Event", "Starting Log",
                                  {'time': datetime.time(),
-                                  "message": pi.profile_name,
+                                  "message": "Program Starting with active profile, and not in operational vacuum. Ending Profile.",
                                   "ProfileInstance": ProfileInstance.getInstance()})
                 ending_active_profile()
         # end if no active profile

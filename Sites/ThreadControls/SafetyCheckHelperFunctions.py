@@ -4,6 +4,7 @@ from Collections.HardwareStatusInstance import HardwareStatusInstance
 from Collections.ProfileInstance import ProfileInstance
 from Logging.Logging import Logging
 from ThreadControls.ThreadHelperFunctions import release_hold
+from ThreadControls.helperFunctions.safe_mode import enter_safe_mode
 
 
 def power_failure():
@@ -21,31 +22,6 @@ def power_failure():
 
     results = results and HardwareStatusInstance.getInstance().pc_104_power
     return not results
-
-
-def enter_safe_mode(error_mesg):
-    ProfileInstance.getInstance().active_profile = False
-    Logging.debug_print(1, error_mesg)
-    print(error_mesg)
-    d_out = HardwareStatusInstance.getInstance().pc_104.digital_out
-    d_out.update({"IR Lamp 1 PWM DC": 0})
-    d_out.update({"IR Lamp 2 PWM DC": 0})
-    d_out.update({"IR Lamp 3 PWM DC": 0})
-    d_out.update({"IR Lamp 4 PWM DC": 0})
-    d_out.update({"IR Lamp 5 PWM DC": 0})
-    d_out.update({"IR Lamp 6 PWM DC": 0})
-    d_out.update({"IR Lamp 7 PWM DC": 0})
-    d_out.update({"IR Lamp 8 PWM DC": 0})
-    d_out.update({"IR Lamp 9 PWM DC": 0})
-    d_out.update({"IR Lamp 10 PWM DC": 0})
-    d_out.update({"IR Lamp 11 PWM DC": 0})
-    d_out.update({"IR Lamp 12 PWM DC": 0})
-    d_out.update({"IR Lamp 13 PWM DC": 0})
-    d_out.update({"IR Lamp 14 PWM DC": 0})
-    d_out.update({"IR Lamp 15 PWM DC": 0})
-    d_out.update({"IR Lamp 16 PWM DC": 0})
-    HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Shroud Duty Cycle', 0])
-    HardwareStatusInstance.getInstance().tdk_lambda_cmds.append(['Platen Duty Cycle', 0])
 
 
 def is_error_in_list(error, error_in_list, error_list):
@@ -172,7 +148,7 @@ def log_over_heated_tc(max_operating_temperature, overheated_tc, tc, temp_error_
             log_event(error, pi.error_list)
             temp_error_dict[error['event']] = True
 
-            enter_safe_mode("ERROR Heat was above max operating temperature ({})")
+            enter_safe_mode(pi, "ERROR Heat was above max operating temperature ({})")
 
             release_hold()
     except Exception as e:
@@ -193,7 +169,7 @@ def log_removed_tcs(hw):
                 "event": "Thermocouple {} Disconnected".format(tc.Thermocouple),
                 "item": "Thermocouple",
                 "itemID": tc.Thermocouple,
-                "details": "Thermocouple {} lost".format(tc.Thermocouple),
+                "details": "",
                 "actions": ["Log Event"]
             }
             print("TC {} has been removed".format(tc.Thermocouple))
@@ -217,7 +193,7 @@ def log_hw_error(pi, item, error_details):
         "details": error_details,
         "actions": ["Log Event"]
     }
-    enter_safe_mode(error_details)
+    enter_safe_mode(pi, error_details)
     log_event(error_log, pi.error_list)
     pi.active_profile = False
 
@@ -240,7 +216,7 @@ def test_if_left_vacuum_while_vacuum_wanted(hw, pi, temp_error_dict):
             log_event(error, pi.error_list)
             temp_error_dict[error['event']] = True
             error_mesg = "ERROR Pressure is above 10^- while in active profile. ({})".format(current_pressure)
-            enter_safe_mode(error_mesg)
+            enter_safe_mode(pi, error_mesg)
             release_hold()
         # end if vacuum in bad condition
     except Exception as e:

@@ -7,7 +7,8 @@ from Logging.Logging import Logging
 from ThreadControls.controlStubs.HelperFuctions.dutyCycleFunctions import check_active_duty_cycle, \
     ending_active_profile, \
     active_profile_setup, duty_cycle_update, check_hold, ln2_update, turn_off_heat
-from ThreadControls.SafetyCheckHelperFunctions import enter_safe_mode, log_event
+from ThreadControls.SafetyCheckHelperFunctions import log_event
+from ThreadControls.helperFunctions.safe_mode import enter_safe_mode
 
 
 class DutyCycleControlStub(Thread):
@@ -66,7 +67,7 @@ class DutyCycleControlStub(Thread):
                         "details": error_details,
                         "actions": ["Log Event"]
                     }
-                    enter_safe_mode(error_details)
+                    enter_safe_mode(pi, error_details)
                     log_event(error_log, pi.error_list)
                     pi.active_profile = False
 

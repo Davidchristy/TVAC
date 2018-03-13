@@ -11,7 +11,9 @@ from ThreadControls.updaters.helperFunctions.TcUpdateFunctions import *
 from ThreadControls.updaters.helperFunctions.TdkUpdateFunctions import *
 from ThreadControls.updaters.helperFunctions.CompUpdateFunctions import *
 
-from ThreadControls.SafetyCheckHelperFunctions import enter_safe_mode, log_event
+from ThreadControls.SafetyCheckHelperFunctions import log_event
+from ThreadControls.helperFunctions.safe_mode import enter_safe_mode
+
 
 class HardwareUpdater(Thread):
     def __init__(self, parent=None):
@@ -131,7 +133,7 @@ class HardwareUpdater(Thread):
                     "details": error_details,
                     "actions": ["Log Event"]
                 }
-                enter_safe_mode(error_details)
+                enter_safe_mode(pi, error_details)
                 log_event(error_log, pi.error_list)
                 pi.active_profile = False
             # Sleep for a second if it fails

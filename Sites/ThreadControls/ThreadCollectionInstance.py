@@ -15,7 +15,7 @@ class ThreadCollectionInstance:
         return ThreadCollectionInstance.__instance
 
     def __init__(self):
-        if ThreadCollectionInstance.__instance != None:
+        if ThreadCollectionInstance.__instance:
             raise Exception("This class is a singleton!")
         else:
             Logging.logEvent("Debug","Status Update",

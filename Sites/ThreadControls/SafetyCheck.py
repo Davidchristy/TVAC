@@ -4,8 +4,9 @@ from datetime import datetime
 from Collections.HardwareStatusInstance import HardwareStatusInstance
 from Collections.ProfileInstance import ProfileInstance
 from Logging.Logging import Logging
-from ThreadControls.SafetyCheckHelperFunctions import power_failure, enter_safe_mode, log_event, \
+from ThreadControls.SafetyCheckHelperFunctions import power_failure, log_event, \
     log_removed_tcs, test_if_left_vacuum_while_vacuum_wanted, test_thermocouples_for_errors
+from ThreadControls.helperFunctions.safe_mode import enter_safe_mode
 
 
 class SafetyCheck(Thread):
@@ -77,18 +78,20 @@ class SafetyCheck(Thread):
                     }
 
 
-                    if power_failure():
-                        error_log = {
-                            "time": str(datetime.now()),
-                                "event": "Power Loss",
-                                "item": "Unknown",
-                                "itemID": 0,
-                                "details": "There has been a connection or power failure, check status page for details.",
-                                "actions": ["Log Event"]
-                        }
-                        log_event(error_log, pi.error_list)
-                        if pi.active_profile:
-                            enter_safe_mode("There has been a power failure during a profile.")
+                    # This is removed for now, because it's been added to all the sections that might have power failer
+                    # and is duplicated code. Still want to have in case needed later
+                    # if power_failure():
+                    #     error_log = {
+                    #         "time": str(datetime.now()),
+                    #             "event": "Power Loss",
+                    #             "item": "Unknown",
+                    #             "itemID": 0,
+                    #             "details": "There has been a connection or power failure, check status page for details.",
+                    #             "actions": ["Log Event"]
+                    #     }
+                    #     log_event(error_log, pi.error_list)
+                    #     if pi.active_profile:
+                    #         enter_safe_mode("There has been a power failure during a profile.")
 
                     log_removed_tcs(hw)
 

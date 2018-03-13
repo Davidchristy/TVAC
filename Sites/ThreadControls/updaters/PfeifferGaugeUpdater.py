@@ -6,7 +6,8 @@ import time
 from threading import Thread
 
 from ThreadControls.SafetyCheckHelperFunctions import log_hw_error
-from ThreadControls.SafetyCheckHelperFunctions import enter_safe_mode, log_event
+from ThreadControls.SafetyCheckHelperFunctions import log_event
+from ThreadControls.helperFunctions.safe_mode import enter_safe_mode
 
 if __name__ == '__main__':
     sys.path.insert(0, os.getcwd())
@@ -177,7 +178,7 @@ class PfeifferGaugeUpdater(Thread):
                     "details": error_details,
                     "actions": ["Log Event"]
                 }
-                enter_safe_mode(error_details)
+                enter_safe_mode(pi, error_details)
                 log_event(error_log, pi.error_list)
                 pi.active_profile = False
 
