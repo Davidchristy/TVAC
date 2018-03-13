@@ -4,6 +4,7 @@ from Logging.Logging import Logging
 
 def enter_safe_mode(pi, error_mesg):
     pi.active_profile = False
+    hw = HardwareStatusInstance.getInstance()
     Logging.debug_print(1, error_mesg)
     print(error_mesg)
     d_out = HardwareStatusInstance.getInstance().pc_104.digital_out
