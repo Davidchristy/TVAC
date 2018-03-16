@@ -257,7 +257,6 @@ class VacuumControlStub(Thread):
         :return:
         """
         hw = HardwareStatusInstance.getInstance()
-        pi = ProfileInstance.getInstance()
 
         if (current_state['cryopump_pres'] > current_state['atm_pres']) and \
                 (current_state['chamber_pres'] > current_state['atm_pres']):
@@ -266,7 +265,7 @@ class VacuumControlStub(Thread):
         if current_state['chamber_pres'] < current_state['weak_vac_x_over_pres']:
             self.state = 'Non-Operational Vacuum'
 
-        if not pi.vacuum_wanted or hw.shi_cryopump.is_regen_active():
+        if not current_state['vacuum_wanted'] or current_state['is_regen_active']:
             return
         if current_state['cryopump_pres'] < current_state['cryopump_x_over_pres']:
             hw.shi_mcc_cmds.append(['Close_PurgeValve'])
@@ -319,10 +318,7 @@ class VacuumControlStub(Thread):
 
     def state_02(self, current_state):  # PullingVac: Start
         """
-        pi.vacuum_wanted
-        hw.shi_cryopump.is_regen_active()
-        roughPumpPressure
-        pres_ruffon
+
         :return:
         """
         hw = HardwareStatusInstance.getInstance()
@@ -346,8 +342,8 @@ class VacuumControlStub(Thread):
         """
         hw = HardwareStatusInstance.getInstance()
         if not current_state['vacuum_wanted'] or current_state['is_regen_active']:
-            # If we aren't pumping the chamber, close the roughing pump, and set set non-operational vacuum
 
+            # If we aren't pumping the chamber, close the roughing pump, and set set non-operational vacuum
             if not current_state['roughing_gv_open'] and \
                    not current_state['rough_pump_pumping']:
                 hw.pc_104.digital_out.update({'RoughP PurgeGass': False})
@@ -387,7 +383,7 @@ class VacuumControlStub(Thread):
             self.state = 'PullingVac: Cryo Pumping; Cross Over'
             return
 
-        # TODO: if this line is hit before the roughing gate valve is closed
+        # TODO: if this line is hit before the roughing gate valve is closed, there will be problems
         if current_state['chamber_pres'] < current_state['min_roughing_pres']:
             hw.pc_104.digital_out.update({'RoughP Pwr Relay': False})
             return
@@ -483,6 +479,7 @@ class VacuumControlStub(Thread):
 
         if current_state['is_regen_active'] or \
                 (not current_state['is_cryopump_cold']):
+            # TODO: Why are both these op-vac?
             self.state = 'Operational Vacuum'
             hw.pc_104.digital_out.update({'CryoP GateValve': False})
             if not current_state['cryopump_gv_closed']:
@@ -552,16 +549,6 @@ class VacuumControlStub(Thread):
 
     def state_10(self, current_state):  # Non-Operational Vacuum
         """
-        self.chamberPressure
-        self.cryoPumpPressure
-        self.pres_cryoP_Prime
-        self.pres_opVac
-        self.pres_atm
-        self.pres_ruffon
-        pi.vacuum_wanted
-        hw.shi_cryopump.is_regen_active()
-        hw.pc_104.digital_in.getVal('RoughP_Powered')
-        hw.pc_104.digital_in.getVal('RoughP_On_Sw')
         :return:
         """
         hw = HardwareStatusInstance.getInstance()
@@ -575,7 +562,7 @@ class VacuumControlStub(Thread):
         if not current_state['vacuum_wanted'] or current_state['is_regen_active']:
             return
 
-        if current_state['chamber_pres'] < current_state['cryopump_x_over_pres']:
+        if current_state['cryopump_pres'] < current_state['cryopump_x_over_pres']:
             hw.shi_mcc_cmds.append(['Close_PurgeValve'])
             hw.shi_mcc_cmds.append(['Close_RoughingValve'])
             hw.shi_compressor_cmds.append('on')
@@ -617,10 +604,10 @@ class VacuumControlStub(Thread):
         if current_state['roughing_gv_open']:
             hw.pc_104.digital_out.update({'RoughP GateValve': False})
             hw.pc_104.digital_out.update({'CryoP GateValve': False})
-            if not hw.shi_cryopump.is_regen_active():
+            if hw.shi_cryopump.is_regen_active():
+                return 'Non-Operational Vacuum'
+            else:
                 return 'PullingVac: RoughingCryoP'
-
-            return 'Non-Operational Vacuum'
 
         if not (hw.pc_104.digital_out.getVal('RoughP GateValve')):
             return 'Non-Operational Vacuum'
